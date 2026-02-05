@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildLiveVaultGraph } from '@/services/live-data';
-import { buildVaultGraph } from '@/services/graph-builder';
+import { buildVaultGraph, GraphBuildResult } from '@/services/graph-builder';
 import { Entity, RiskAssessment } from '@/types/core';
 import { riskCalculator } from '@/services/risk-calculator';
+import { swrCache, CacheKeys, CacheTTL } from '@/services/cache';
+
+// Type for the live-data graph result
+type LiveGraphResult = Awaited<ReturnType<typeof buildLiveVaultGraph>>;
 
 export async function GET(
   request: NextRequest,
@@ -11,18 +15,31 @@ export async function GET(
   const { id } = await params;
   const vaultId = decodeURIComponent(id);
 
-  // Check for adapter mode query param (use new adapter-based system)
+  // Check for adapter mode and refresh query params
   const useAdapters = request.nextUrl.searchParams.get('adapters') === 'true';
+  const forceRefresh = request.nextUrl.searchParams.get('refresh') === 'true';
 
   try {
     console.log(`[API] Fetching graph for vault: ${vaultId} (adapters=${useAdapters})`);
 
+    // Force refresh if requested
+    if (forceRefresh) {
+      swrCache.invalidate(CacheKeys.vaultGraph(vaultId));
+    }
+
     // Use new adapter-based system if requested
     if (useAdapters) {
-      const adapterResult = await buildVaultGraph(vaultId, {
-        includeGovernance: true,
-        includeOracles: true,
-      });
+      const { data: adapterResult, fromCache, isStale } = await swrCache.get(
+        CacheKeys.vaultGraph(vaultId),
+        async () => {
+          console.log(`[API] Cache miss - building graph for ${vaultId}...`);
+          return await buildVaultGraph(vaultId, {
+            includeGovernance: true,
+            includeOracles: true,
+          });
+        },
+        CacheTTL.graph
+      );
 
       if (!adapterResult) {
         return NextResponse.json(
@@ -31,7 +48,7 @@ export async function GET(
         );
       }
 
-      // Calculate risk assessments
+      // Calculate risk assessments (cached separately or inline)
       const assessments = await riskCalculator.calculateGraphRisks(adapterResult.graph);
 
       // Convert exposures Map to serializable format
@@ -66,12 +83,24 @@ export async function GET(
         totalTvl: adapterResult.totalTvl,
         warnings: adapterResult.warnings,
         source: 'adapters',
+        cache: {
+          hit: fromCache,
+          stale: isStale,
+        },
         timestamp: new Date().toISOString(),
       });
     }
 
-    // Default: use existing live-data system
-    const result = await buildLiveVaultGraph(vaultId);
+    // Default: use existing live-data system with caching
+    const cacheKey = `${CacheKeys.vaultGraph(vaultId)}:legacy`;
+    const { data: result, fromCache, isStale } = await swrCache.get(
+      cacheKey,
+      async () => {
+        console.log(`[API] Cache miss - building legacy graph for ${vaultId}...`);
+        return await buildLiveVaultGraph(vaultId);
+      },
+      CacheTTL.graph
+    );
 
     if (!result) {
       return NextResponse.json(
@@ -115,11 +144,30 @@ export async function GET(
       },
       exposures: exposuresObject,
       riskAssessments: assessmentsObject,
-      cached: false,
+      cache: {
+        hit: fromCache,
+        stale: isStale,
+      },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error(`[API] Error fetching vault graph for ${vaultId}:`, error);
+
+    // Try to return cached data on error
+    const cachedResult = swrCache.getCached<GraphBuildResult | LiveGraphResult>(
+      CacheKeys.vaultGraph(vaultId)
+    ) || swrCache.getCached<LiveGraphResult>(`${CacheKeys.vaultGraph(vaultId)}:legacy`);
+
+    if (cachedResult) {
+      console.log(`[API] Returning stale cache on error for ${vaultId}`);
+      // Return minimal cached response
+      return NextResponse.json({
+        success: true,
+        error: 'Returning cached data due to fetch error',
+        cache: { hit: true, stale: true, error: true },
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json(
       {
