@@ -90,10 +90,14 @@ const TOKEN_PRICES: Record<string, number> = {
   'USDC': 1,
   'USDT': 1,
   'DAI': 1,
+  'FRAX': 1,
   'WETH': 3200, // Will be updated dynamically
   'ETH': 3200,
   'stETH': 3200,
   'wstETH': 3700,
+  'BTC': 100000, // Will be updated dynamically
+  'WBTC': 100000,
+  'cbBTC': 100000,
 };
 
 async function updateTokenPrices(): Promise<void> {
@@ -101,6 +105,7 @@ async function updateTokenPrices(): Promise<void> {
     const prices = await defiLlamaClient.getTokenPrices([
       { chain: 'ethereum', address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' }, // WETH
       { chain: 'ethereum', address: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84' }, // stETH
+      { chain: 'ethereum', address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599' }, // WBTC
     ]);
 
     const wethPrice = prices.get('ethereum:0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2');
@@ -109,6 +114,13 @@ async function updateTokenPrices(): Promise<void> {
       TOKEN_PRICES['ETH'] = wethPrice;
       TOKEN_PRICES['stETH'] = wethPrice;
       TOKEN_PRICES['wstETH'] = wethPrice * 1.15; // Approximate wstETH premium
+    }
+
+    const wbtcPrice = prices.get('ethereum:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599');
+    if (wbtcPrice) {
+      TOKEN_PRICES['BTC'] = wbtcPrice;
+      TOKEN_PRICES['WBTC'] = wbtcPrice;
+      TOKEN_PRICES['cbBTC'] = wbtcPrice;
     }
   } catch (error) {
     console.warn('Failed to update token prices, using defaults');

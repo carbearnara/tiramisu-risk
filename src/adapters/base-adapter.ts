@@ -178,12 +178,25 @@ export abstract class BaseAdapter implements ProtocolAdapter {
    * Override this for custom pricing logic
    */
   protected getTokenPriceUsd(symbol: string): number {
-    // Default: stablecoins = $1, others need price feeds
-    const stablecoins = ['USDC', 'USDT', 'DAI', 'FRAX', 'USDS', 'USDe', 'sUSDe', 'rUSD', 'reUSD', 'iUSD'];
-    if (stablecoins.some(s => symbol.toUpperCase().includes(s.toUpperCase()))) {
+    const upperSymbol = symbol.toUpperCase();
+
+    // Stablecoins = $1
+    const stablecoins = ['USDC', 'USDT', 'DAI', 'FRAX', 'USDS', 'USDe', 'sUSDe', 'rUSD', 'reUSD', 'iUSD', 'USR', 'USN'];
+    if (stablecoins.some(s => upperSymbol.includes(s.toUpperCase()))) {
       return 1;
     }
-    // TODO: Integrate with price oracle for non-stablecoins
+
+    // ETH-based tokens
+    if (upperSymbol.includes('ETH') || upperSymbol.includes('STETH') || upperSymbol === 'WETH') {
+      return 3200; // TODO: Fetch live price
+    }
+
+    // BTC-based tokens
+    if (upperSymbol.includes('BTC') || upperSymbol === 'WBTC' || upperSymbol === 'CBBTC') {
+      return 100000; // TODO: Fetch live price
+    }
+
+    // Default for unknown tokens
     return 1;
   }
 
