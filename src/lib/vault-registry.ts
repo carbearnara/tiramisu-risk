@@ -759,9 +759,12 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
   },
 
   // Ethena - Synthetic dollar (USDe/sUSDe)
-  // USDe is backed by delta-neutral positions: long spot ETH/BTC + short perps
-  // Source: https://ethena.fi/transparency, https://docs.ethena.fi/how-usde-works
-  // ~93% delta-neutral positions, ~7% liquid stablecoins (USDC, USDT, USDtb)
+  // USDe is backed by delta-neutral positions: long spot crypto + short perps
+  // Source: https://app.ethena.fi/dashboards/transparency
+  // Source: https://docs.ethena.fi/how-usde-works
+  // Source: https://coinmetrics.substack.com/p/state-of-the-network-issue-335
+  // Custody: Copper, CEFFU, Anchorage Digital, Kraken
+  // ~14% ETH LSTs, ~50% BTC, ~29% ETH/SOL, ~7% stablecoins (USDC, USDT, USDtb)
   {
     id: 'protocol:ethena',
     name: 'Ethena',
@@ -778,9 +781,10 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     auditors: ['Quantstamp', 'Pashov'],
     isUpgradeable: true,
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 50, asset: 'stETH' },  // Lido stETH + short ETH perps
-      { protocol: 'delta-neutral', allocation: 28, asset: 'BTC' },    // BTC + short BTC perps
-      { protocol: 'delta-neutral', allocation: 15, asset: 'ETH' },    // Native ETH + short perps
+      { protocol: 'delta-neutral', allocation: 50, asset: 'BTC' },    // BTC + short BTC perps (largest allocation)
+      { protocol: 'delta-neutral', allocation: 14, asset: 'stETH' },  // ETH LSTs + short ETH perps
+      { protocol: 'delta-neutral', allocation: 14, asset: 'ETH' },    // Native ETH + short perps
+      { protocol: 'delta-neutral', allocation: 15, asset: 'SOL' },    // SOL + short SOL perps (added Oct 2024)
       { protocol: 'usdt-reserve', allocation: 3, asset: 'USDT' },     // Tether reserve
       { protocol: 'usdc-reserve', allocation: 2, asset: 'USDC' },     // Circle reserve
       { protocol: 'tbills', allocation: 2, asset: 'USDtb' },          // USDtb (Ethena's T-bill token)
@@ -1085,6 +1089,7 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
 
   // Delta-Neutral Strategies (perps hedging)
   // Includes CEX counterparty risk for perpetual futures
+  // Custody providers: Copper, CEFFU, Anchorage Digital, Kraken
   {
     id: 'protocol:delta-neutral',
     name: 'Delta-Neutral (Perps)',
@@ -1097,8 +1102,32 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     auditors: [],
     isUpgradeable: true,
     strategyAllocations: [
-      { protocol: 'cex-counterparty', allocation: 100, asset: 'PERP' }, // All perps on CEXs
+      { protocol: 'custody-copper', allocation: 35, asset: 'CUSTODY' },    // Copper custody
+      { protocol: 'custody-ceffu', allocation: 30, asset: 'CUSTODY' },     // CEFFU (Binance custody)
+      { protocol: 'cex-counterparty', allocation: 35, asset: 'PERP' },     // CEX perp exposure
     ],
+  },
+
+  // Custody Providers
+  {
+    id: 'protocol:custody-copper',
+    name: 'Copper.co',
+    slug: 'custody-copper',
+    category: ProtocolCategory.OTHER,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.MULTISIG },
+    auditors: ['SOC 2 Type II'],
+    isUpgradeable: false,
+  },
+  {
+    id: 'protocol:custody-ceffu',
+    name: 'CEFFU (Binance Custody)',
+    slug: 'custody-ceffu',
+    category: ProtocolCategory.OTHER,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.MULTISIG },
+    auditors: ['SOC 2 Type II'],
+    isUpgradeable: false,
   },
 
   // MakerDAO / Sky - DAI/sDAI issuer
@@ -1319,6 +1348,33 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     decimals: 18,
     type: 'lst',
     issuer: 'protocol:lido',
+  },
+  {
+    id: 'token:SOL:ethereum',
+    symbol: 'SOL',
+    name: 'Wrapped Solana',
+    chain: Chain.ETHEREUM,
+    address: '0xD31a59c85aE9D8edEFeC411D448f90841571b89c', // Wormhole wrapped SOL
+    decimals: 9,
+    type: 'native',
+  },
+  {
+    id: 'token:BTC:ethereum',
+    symbol: 'BTC',
+    name: 'Bitcoin',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Native BTC (represented)
+    decimals: 8,
+    type: 'native',
+  },
+  {
+    id: 'token:ETH:ethereum',
+    symbol: 'ETH',
+    name: 'Ethereum',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Native ETH
+    decimals: 18,
+    type: 'native',
   },
   // Additional stablecoins tracked in strategy allocations
   {
