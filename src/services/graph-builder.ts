@@ -130,9 +130,36 @@ export class GraphBuilder {
         weight: exp.percentage / 100,
         metadata: {
           market: exp.market,
+          asset: exp.asset,
           valueUsd: exp.valueUsd,
         },
       });
+
+      // If this allocation has a specific underlying asset, create edge to that token
+      if (exp.asset && exp.asset !== trackedVault.underlying) {
+        const assetTokenId = `token:${exp.asset}:${trackedVault.chain}`;
+
+        // Add edge from protocol to underlying asset
+        edges.push({
+          id: `${protocolId}->asset:${assetTokenId}`,
+          sourceId: protocolId,
+          targetId: assetTokenId,
+          type: DependencyType.UNDERLYING_ASSET,
+          weight: 1,
+          metadata: {
+            fromAllocation: exp.protocol,
+            percentage: exp.percentage,
+          },
+        });
+
+        // Queue the asset token for traversal
+        queue.push({
+          entityId: assetTokenId,
+          depth: 2,
+          parentId: protocolId,
+          allocationPct: exp.percentage,
+        });
+      }
     }
 
     // Add underlying asset dependency
@@ -221,7 +248,7 @@ export class GraphBuilder {
   private createVaultEntity(
     vault: TrackedVault,
     tvl: number,
-    exposures: Array<{ protocol: string; market?: string; percentage: number; valueUsd: number }>
+    exposures: Array<{ protocol: string; market?: string; asset?: string; percentage: number; valueUsd: number }>
   ): VaultEntity {
     const protocol = getProtocolBySlug(vault.protocolSlug);
 
@@ -397,6 +424,53 @@ export class GraphBuilder {
 
     if (entity.type === EntityType.PROTOCOL) {
       const protocol = entity as ProtocolEntity;
+      const slug = entity.id.replace('protocol:', '');
+      const trackedProtocol = getProtocolBySlug(slug);
+
+      // Nested protocol allocations (e.g., Cap → Ethena, Ethena → delta-neutral)
+      if (trackedProtocol?.strategyAllocations) {
+        for (const alloc of trackedProtocol.strategyAllocations) {
+          const targetProtocolId = `protocol:${alloc.protocol}`;
+          const weight = alloc.allocation / 100;
+
+          deps.push({
+            edge: {
+              id: `${entity.id}->nested:${targetProtocolId}`,
+              sourceId: entity.id,
+              targetId: targetProtocolId,
+              type: DependencyType.NESTED_VAULT, // Reusing for nested protocol exposure
+              weight,
+              metadata: {
+                asset: alloc.asset,
+                market: alloc.market,
+                allocationPct: alloc.allocation,
+              },
+            },
+            targetId: targetProtocolId,
+            weight,
+          });
+
+          // Also add edge to the underlying asset if specified
+          if (alloc.asset) {
+            const assetTokenId = `token:${alloc.asset}:${chain}`;
+            deps.push({
+              edge: {
+                id: `${entity.id}->asset:${assetTokenId}`,
+                sourceId: entity.id,
+                targetId: assetTokenId,
+                type: DependencyType.UNDERLYING_ASSET,
+                weight,
+                metadata: {
+                  viaProtocol: alloc.protocol,
+                  allocationPct: alloc.allocation,
+                },
+              },
+              targetId: assetTokenId,
+              weight,
+            });
+          }
+        }
+      }
 
       // Oracle dependency
       if (options.includeOracles && protocol.oracle?.providerId) {

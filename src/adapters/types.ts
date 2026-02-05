@@ -11,6 +11,8 @@ export interface Allocation {
   protocol: string;
   /** Market or strategy identifier (e.g., 'cbBTC/USDC', 'sUSDe') */
   market?: string;
+  /** Underlying asset for this allocation (e.g., 'USDC', 'USDe', 'stcUSD') */
+  asset?: string;
   /** Allocation percentage (0-100) */
   percentage: number;
   /** USD value of allocation (if available) */
@@ -96,6 +98,7 @@ export interface ProtocolAdapter {
 export interface ConfiguredAllocation {
   protocol: string;
   allocation: number; // Percentage 0-100
+  asset?: string; // Underlying stablecoin/asset (e.g., 'USDC', 'USDe', 'stcUSD')
   market?: string;
 }
 

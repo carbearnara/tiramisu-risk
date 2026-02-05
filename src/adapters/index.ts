@@ -83,6 +83,7 @@ class AdapterRegistry {
       const allocations: Allocation[] = configuredAllocations.map(c => ({
         protocol: c.protocol,
         market: c.market,
+        asset: c.asset,
         percentage: c.allocation,
       }));
 
@@ -147,7 +148,7 @@ class AdapterRegistry {
   ): Promise<{
     tvl: TvlResult | null;
     allocations: AllocationResult;
-    exposures: Array<{ protocol: string; market?: string; valueUsd: number; percentage: number }>;
+    exposures: Array<{ protocol: string; market?: string; asset?: string; valueUsd: number; percentage: number }>;
   }> {
     // Fetch TVL and allocations in parallel
     const [tvl, allocations] = await Promise.all([
@@ -161,6 +162,7 @@ class AdapterRegistry {
     const exposures = allocations.allocations.map(a => ({
       protocol: a.protocol,
       market: a.market,
+      asset: a.asset,
       percentage: a.percentage,
       valueUsd: a.valueUsd || (totalUsd * a.percentage) / 100,
     }));
