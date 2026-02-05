@@ -13,7 +13,10 @@ import {
   Chain,
   GovernanceType,
   MAX_TRAVERSAL_DEPTH,
+  CycleInfo,
+  CycleExposure,
 } from '@/types/core';
+import { cycleDetector } from './cycle-detector';
 import {
   TrackedVault,
   TrackedProtocol,
@@ -64,6 +67,8 @@ export interface GraphBuildResult {
   exposures: Map<string, ExposureNode>;
   totalTvl: number;
   warnings: string[];
+  cycles: CycleInfo[];
+  cycleExposures: CycleExposure[];
 }
 
 // ============== GRAPH BUILDER ==============
@@ -249,11 +254,53 @@ export class GraphBuilder {
       rootEntityId: rootEntity.id,
     };
 
+    // Detect cycles in the graph
+    const cycles = cycleDetector.detectCycles(graph);
+
+    if (cycles.length > 0) {
+      this.warnings.push(`Graph contains ${cycles.length} circular dependency/dependencies`);
+    }
+
+    // Calculate base exposures map for cycle calculation
+    const baseExposureMap = new Map<string, number>();
+    for (const [entityId, node] of exposures) {
+      baseExposureMap.set(entityId, node.exposure);
+    }
+
+    // Adjust exposures for cycles
+    const adjustedExposureMap = cycleDetector.adjustExposuresForCycles(
+      graph,
+      baseExposureMap,
+      cycles,
+      totalTvl
+    );
+
+    // Update exposure nodes with adjusted values
+    for (const [entityId, adjustedExposure] of adjustedExposureMap) {
+      const node = exposures.get(entityId);
+      if (node && node.exposure !== adjustedExposure) {
+        exposures.set(entityId, {
+          ...node,
+          exposure: adjustedExposure,
+          percentage: totalTvl > 0 ? (adjustedExposure / totalTvl) * 100 : 0,
+        });
+      }
+    }
+
+    // Calculate cycle exposures
+    const cycleExposures = cycleDetector.calculateCycleExposures(
+      graph,
+      cycles,
+      baseExposureMap
+    );
+
     return {
       graph,
       exposures,
       totalTvl,
       warnings: this.warnings,
+      cycles,
+      cycleExposures,
     };
   }
 

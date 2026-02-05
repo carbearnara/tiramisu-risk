@@ -393,6 +393,8 @@ export interface GraphNode {
     entity: Entity;
     riskAssessment?: RiskAssessment;
     exposure: number; // USD exposure from root vault
+    exposurePercent?: number; // Percentage exposure (for consolidated view)
+    isConsolidated?: boolean; // Whether in consolidated view mode
     expanded: boolean;
     isRoot: boolean;
   };
@@ -405,11 +407,31 @@ export interface GraphEdge {
   target: string;
   type: DependencyType;
   data: {
-    edge: DependencyEdge;
+    edge?: DependencyEdge;
     riskContribution?: number;
+    exposurePercent?: number; // For consolidated view
   };
   animated?: boolean;
+  label?: string;
   style?: Record<string, string>;
+}
+
+// ============== CYCLE DETECTION ==============
+
+export interface CycleInfo {
+  id: string;
+  nodes: string[]; // Entity IDs in the cycle (e.g., [A, B, C] for A→B→C→A)
+  edges: string[]; // Edge IDs forming the cycle
+  minWeight: number; // Minimum edge weight in cycle
+  cycleType: 'direct' | 'indirect'; // Direct A→B→A or indirect A→B→C→A
+}
+
+export interface CycleExposure {
+  cycleId: string;
+  entryExposure: number; // USD entering the cycle
+  totalExposure: number; // Total USD accounting for cycle (converged)
+  convergenceRatio: number; // Product of weights around cycle (< 1)
+  iterations: number; // Iterations to reach 99% convergence
 }
 
 // ============== UTILITY TYPES ==============

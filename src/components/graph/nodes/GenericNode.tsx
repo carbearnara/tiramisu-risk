@@ -8,6 +8,8 @@ interface GenericNodeData {
   entity: Entity;
   riskAssessment?: RiskAssessment;
   exposure: number;
+  exposurePercent?: number;
+  isConsolidated?: boolean;
   isRoot: boolean;
   expanded: boolean;
 }
@@ -37,7 +39,7 @@ function formatCurrency(value: number): string {
 }
 
 export const GenericNode = memo(({ data, selected }: GenericNodeProps) => {
-  const { entity, riskAssessment, exposure, isRoot } = data;
+  const { entity, riskAssessment, exposure, exposurePercent, isConsolidated, isRoot } = data;
   const riskColor = riskAssessment ? riskLevelToColor(riskAssessment.overallLevel) : '#9CA3AF';
   const dotColor = entityTypeColors[entity.type] || 'bg-gray-500';
 
@@ -62,7 +64,11 @@ export const GenericNode = memo(({ data, selected }: GenericNodeProps) => {
       {/* Exposure - Key metric (only if > 0) */}
       {exposure > 0 && (
         <div className="text-sm font-semibold text-gray-900">
-          {formatCurrency(exposure)}
+          {isConsolidated && exposurePercent !== undefined ? (
+            <span className="text-blue-600">{exposurePercent.toFixed(1)}%</span>
+          ) : (
+            formatCurrency(exposure)
+          )}
         </div>
       )}
 

@@ -367,7 +367,7 @@ export const TRACKED_VAULTS: TrackedVault[] = [
       { protocol: 'fluid', allocation: 3, asset: 'USDC' },            // Verified: $2.4M Fluid USDC
       { protocol: 'morpho', allocation: 1, asset: 'USDC' },           // Verified: $1.7M Morpho USDC vaults
       { protocol: 'uniswap-v3', allocation: 1, asset: 'USDC+USDT' },  // Verified: $1.1M Uniswap V4 LP
-      { protocol: 'pendle', allocation: 1, asset: 'PT-iUSD' },        // Verified: $178K Pendle positions
+      { protocol: 'infinifi', allocation: 1, asset: 'PT-iUSD' },       // Verified: $178K Pendle PT-iUSD → infiniFi
     ],
   },
   {
@@ -438,10 +438,13 @@ export const TRACKED_VAULTS: TrackedVault[] = [
   },
 
   // Yuzu Money (OuroborosCap8) - Overcollateralized stablecoin
-  // Yuzu Money - Overcollateralized stablecoin
-  // Source: https://yuzu.accountable.capital/ (on-chain wallet analysis)
+  // Source: https://yuzu.accountable.capital/ (on-chain wallet analysis, audited Feb 2026)
   // Wallets: 0x815f5BB257e88b67216a344C7C83a3eA4EE74748 (Main 1), 0x502D222e8e4DaEF69032f55F0c1A999EFFd78fB3 (Main 4)
-  // Strategy: Maple syrupUSDT + Aave leveraged sUSDe/USDe + Pendle cUSDO LP
+  // TVL: ~$56M
+  // AUDIT FINDINGS (Feb 2026):
+  // - Main 1: ~$2.3M syrupUSDT (4%)
+  // - Main 4: ~$18M aEthsUSDe + ~$22M aEthUSDe collateral, ~$39M USDT borrowed (leveraged Ethena loop)
+  // Strategy is primarily leveraged Ethena via Aave
   {
     id: 'yuzu:yzusd:ethereum',
     name: 'Yuzu yzUSD',
@@ -451,10 +454,10 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     underlying: 'USDC',
     curator: 'Ouroboros Capital',
     strategyAllocations: [
-      { protocol: 'maple', allocation: 45, asset: 'syrupUSDT' },        // Main Wallet 1: Maple Finance syrupUSDT
-      { protocol: 'aave-v3', allocation: 40, asset: 'sUSDe' },          // Main Wallet 4: Leveraged sUSDe/USDe loop
-      { protocol: 'pendle', allocation: 10, asset: 'cUSDO' },           // Main Wallet 2: Pendle LP cUSDO (OpenEden T-bills)
-      { protocol: 'usdt-reserve', allocation: 5, asset: 'USDT' },       // Liquidity Buffer: USDT
+      { protocol: 'ethena', allocation: 72, asset: 'sUSDe' },           // Main 4: Leveraged sUSDe/USDe on Aave (~$40M gross exposure)
+      { protocol: 'maple', allocation: 4, asset: 'syrupUSDT' },         // Main 1: ~$2.3M syrupUSDT
+      { protocol: 'openeden', allocation: 1, asset: 'cUSDO' },          // Minimal PT-cUSDO position
+      { protocol: 'usdt-reserve', allocation: 23, asset: 'USDT' },      // Borrowed USDT used in leverage loop
     ],
   },
   {
@@ -466,15 +469,15 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     underlying: 'USDC',
     curator: 'Ouroboros Capital',
     strategyAllocations: [
-      { protocol: 'maple', allocation: 45, asset: 'syrupUSDT' },        // Maple Finance syrupUSDT
-      { protocol: 'aave-v3', allocation: 40, asset: 'sUSDe' },          // Leveraged sUSDe/USDe on Aave
-      { protocol: 'pendle', allocation: 10, asset: 'cUSDO' },           // Pendle LP cUSDO (OpenEden T-bills)
-      { protocol: 'usdt-reserve', allocation: 5, asset: 'USDT' },       // USDT liquidity buffer
+      { protocol: 'ethena', allocation: 72, asset: 'sUSDe' },           // Leveraged sUSDe/USDe on Aave
+      { protocol: 'maple', allocation: 4, asset: 'syrupUSDT' },         // syrupUSDT
+      { protocol: 'openeden', allocation: 1, asset: 'cUSDO' },          // Minimal PT-cUSDO
+      { protocol: 'usdt-reserve', allocation: 23, asset: 'USDT' },      // Leverage buffer
     ],
   },
   // Yuzu Protection Pool (yzPP) - Junior Tranche
   // Source: https://app.yuzu.money/yzpp
-  // First-loss tranche offering higher yields in exchange for increased risk exposure
+  // First-loss tranche absorbs first losses, same underlying strategies as yzUSD
   {
     id: 'yuzu:yzpp:ethereum',
     name: 'Yuzu Protection Pool (yzPP)',
@@ -483,12 +486,11 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     chain: Chain.ETHEREUM,
     underlying: 'USDC',
     curator: 'Ouroboros Capital',
-    // Junior tranche absorbs first losses, same underlying strategies as yzUSD
     strategyAllocations: [
-      { protocol: 'maple', allocation: 45, asset: 'syrupUSDT' },        // Maple Finance syrupUSDT
-      { protocol: 'aave-v3', allocation: 40, asset: 'sUSDe' },          // Leveraged sUSDe/USDe on Aave
-      { protocol: 'pendle', allocation: 10, asset: 'cUSDO' },           // Pendle LP cUSDO (OpenEden T-bills)
-      { protocol: 'usdt-reserve', allocation: 5, asset: 'USDT' },       // USDT liquidity buffer
+      { protocol: 'ethena', allocation: 72, asset: 'sUSDe' },           // Leveraged sUSDe/USDe on Aave
+      { protocol: 'maple', allocation: 4, asset: 'syrupUSDT' },         // syrupUSDT
+      { protocol: 'openeden', allocation: 1, asset: 'cUSDO' },          // Minimal PT-cUSDO
+      { protocol: 'usdt-reserve', allocation: 23, asset: 'USDT' },      // Leverage buffer
     ],
   },
 
@@ -652,6 +654,8 @@ export const TRACKED_VAULTS: TrackedVault[] = [
   },
 
   // Ethena - Synthetic dollar (delta-neutral)
+  // Source: https://app.ethena.fi/dashboards/transparency
+  // ~50% BTC, ~14% ETH LSTs, ~14% ETH, ~15% SOL, ~7% stablecoins
   {
     id: 'ethena:susde:ethereum',
     name: 'Ethena Staked USDe (sUSDe)',
@@ -662,9 +666,13 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     underlying: 'USDe',
     underlyingAddress: '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3',
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 60, asset: 'stETH' },  // stETH collateral + perps
-      { protocol: 'delta-neutral', allocation: 25, asset: 'BTC' },    // BTC collateral + perps
-      { protocol: 'delta-neutral', allocation: 15, asset: 'ETH' },    // ETH collateral + perps
+      { protocol: 'delta-neutral', allocation: 50, asset: 'BTC' },    // BTC + short BTC perps (largest allocation)
+      { protocol: 'delta-neutral', allocation: 14, asset: 'stETH' },  // ETH LSTs + short ETH perps
+      { protocol: 'delta-neutral', allocation: 14, asset: 'ETH' },    // Native ETH + short perps
+      { protocol: 'delta-neutral', allocation: 15, asset: 'SOL' },    // SOL + short SOL perps (added Oct 2024)
+      { protocol: 'usdt-reserve', allocation: 3, asset: 'USDT' },     // Tether reserve
+      { protocol: 'usdc-reserve', allocation: 2, asset: 'USDC' },     // Circle reserve
+      { protocol: 'tbills', allocation: 2, asset: 'USDtb' },          // USDtb (Ethena's T-bill token)
     ],
   },
 
@@ -929,9 +937,12 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
   // USDe is backed by delta-neutral positions: long spot crypto + short perps
   // Source: https://app.ethena.fi/dashboards/transparency
   // Source: https://docs.ethena.fi/how-usde-works
+  // Source: https://app.ethena.fi/dashboards/transparency (audited Feb 2026)
   // Source: https://coinmetrics.substack.com/p/state-of-the-network-issue-335
-  // Custody: Copper, CEFFU, Anchorage Digital, Kraken
-  // ~14% ETH LSTs, ~50% BTC, ~29% ETH/SOL, ~7% stablecoins (USDC, USDT, USDtb)
+  // Custody: Copper, CEFFU, Anchorage Digital, Kraken (added Jan 2026)
+  // AUDIT FINDINGS: Ethena uses dynamic allocation - percentages shift based on funding rates
+  // ~50% BTC, ~28% ETH (14% LSTs + 14% native), ~5% SOL, ~5% BNB (added late 2025), ~12% stables
+  // Note: SOL allocation smaller than initially planned ($100-200M target = ~3% of $6.5B supply)
   {
     id: 'protocol:ethena',
     name: 'Ethena',
@@ -951,10 +962,11 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
       { protocol: 'delta-neutral', allocation: 50, asset: 'BTC' },    // BTC + short BTC perps (largest allocation)
       { protocol: 'delta-neutral', allocation: 14, asset: 'stETH' },  // ETH LSTs + short ETH perps
       { protocol: 'delta-neutral', allocation: 14, asset: 'ETH' },    // Native ETH + short perps
-      { protocol: 'delta-neutral', allocation: 15, asset: 'SOL' },    // SOL + short SOL perps (added Oct 2024)
-      { protocol: 'usdt-reserve', allocation: 3, asset: 'USDT' },     // Tether reserve
-      { protocol: 'usdc-reserve', allocation: 2, asset: 'USDC' },     // Circle reserve
-      { protocol: 'tbills', allocation: 2, asset: 'USDtb' },          // USDtb (Ethena's T-bill token)
+      { protocol: 'delta-neutral', allocation: 5, asset: 'SOL' },     // SOL + short SOL perps (smaller than initially planned)
+      { protocol: 'delta-neutral', allocation: 5, asset: 'BNB' },     // BNB + short BNB perps (added late 2025)
+      { protocol: 'usdt-reserve', allocation: 4, asset: 'USDT' },     // Tether reserve
+      { protocol: 'usdc-reserve', allocation: 4, asset: 'USDC' },     // Circle reserve
+      { protocol: 'tbills', allocation: 4, asset: 'USDtb' },          // USDtb (Ethena's T-bill token)
     ],
   },
 
@@ -974,13 +986,8 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     },
     auditors: ['Dedaub', 'Ackee Blockchain'],
     isUpgradeable: true,
-    // Default PT allocation (protocols should specify which PT they use)
-    strategyAllocations: [
-      { protocol: 'pt-susde', allocation: 45, asset: 'PT-sUSDe' },   // PT-sUSDe (Ethena staked)
-      { protocol: 'pt-usde', allocation: 25, asset: 'PT-USDe' },     // PT-USDe (Ethena base)
-      { protocol: 'pt-eeth', allocation: 15, asset: 'PT-eETH' },     // PT-eETH (EtherFi)
-      { protocol: 'pt-other', allocation: 15, asset: 'PT-other' },   // Other PT tokens
-    ],
+    // No default allocations - PT exposure depends on which specific PT token is held
+    // Vaults should reference the underlying protocol directly (e.g., ethena for PT-sUSDe)
   },
 
   // Pendle PT tokens (underlying exposure)
@@ -1814,7 +1821,7 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     address: '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3',
     decimals: 18,
     type: 'stablecoin',
-    issuer: 'issuer:ethena',
+    issuer: 'protocol:ethena', // Links to protocol for delta-neutral exposure traversal
     peggedTo: 'USD',
   },
   {
@@ -1981,7 +1988,7 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     address: '0x9D39A5DE30e57443BfF2A8307A4256c8797A3497',
     decimals: 18,
     type: 'stablecoin',
-    issuer: 'issuer:ethena',
+    issuer: 'protocol:ethena', // Links to protocol for delta-neutral exposure traversal
     peggedTo: 'USD',
     collateral: ['token:USDe:ethereum'], // sUSDe is backed by staked USDe
   },

@@ -16,6 +16,7 @@ import { reXyzAdapter } from './rexyz-adapter';
 import { infiniFiAdapter } from './infinifi-adapter';
 import { reservoirAdapter } from './reservoir-adapter';
 import { ethenaAdapter } from './ethena-adapter';
+import { debankAdapter, DEBANK_BUNDLES } from './debank-adapter';
 
 // Re-export types
 export * from './types';
@@ -34,6 +35,7 @@ class AdapterRegistry {
     this.register(infiniFiAdapter);
     this.register(reservoirAdapter);
     this.register(ethenaAdapter);
+    this.register(debankAdapter);
   }
 
   /**
@@ -60,7 +62,7 @@ class AdapterRegistry {
 
   /**
    * Fetch allocations for a vault
-   * Strategy: API/On-chain → Configured fallback
+   * Strategy: DeBank Bundle → Protocol API → Configured fallback
    */
   async fetchAllocations(
     protocolSlug: string,
@@ -68,10 +70,23 @@ class AdapterRegistry {
     chain: Chain,
     configuredAllocations?: ConfiguredAllocation[]
   ): Promise<AllocationResult> {
-    const adapter = this.getAdapter(protocolSlug);
+    // Try DeBank bundle first for protocols that have bundles
+    if (debankAdapter.hasBundleFor(protocolSlug)) {
+      try {
+        const debankResult = await debankAdapter.fetchBundleAllocations(protocolSlug);
+        if (debankResult && debankResult.allocations.length > 0) {
+          console.log(`[AdapterRegistry] Using DeBank data for ${protocolSlug}`);
+          return debankResult;
+        }
+      } catch (error) {
+        console.warn(`[AdapterRegistry] DeBank fetch failed for ${protocolSlug}:`, error);
+        // Fall through to other methods
+      }
+    }
 
-    // Try adapter first
-    if (adapter) {
+    // Try protocol-specific adapter
+    const adapter = this.getAdapter(protocolSlug);
+    if (adapter && adapter.slug !== 'debank') {
       const result = await adapter.fetchAllocations(vaultAddress, chain);
       if (result) {
         return result;
