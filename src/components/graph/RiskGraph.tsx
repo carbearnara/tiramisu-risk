@@ -1,24 +1,20 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ReactFlow,
   Controls,
-  MiniMap,
-  Background,
-  BackgroundVariant,
   useNodesState,
   useEdgesState,
   type NodeTypes,
   type Node,
-  type Edge,
   ConnectionMode,
   Panel,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { useGraphStore } from '@/stores/graph-store';
-import { EntityType, riskLevelToColor } from '@/types/core';
+import { EntityType } from '@/types/core';
 
 // Custom node components
 import { VaultNode } from './nodes/VaultNode';
@@ -26,7 +22,7 @@ import { ProtocolNode } from './nodes/ProtocolNode';
 import { TokenNode } from './nodes/TokenNode';
 import { GenericNode } from './nodes/GenericNode';
 
-// Node type mapping - using type assertion for custom node components
+// Node type mapping
 const nodeTypes: NodeTypes = {
   [EntityType.VAULT]: VaultNode as unknown as NodeTypes[string],
   [EntityType.PROTOCOL]: ProtocolNode as unknown as NodeTypes[string],
@@ -46,12 +42,13 @@ export function RiskGraph({ className }: RiskGraphProps) {
   const {
     nodes: storeNodes,
     edges: storeEdges,
-    assessments,
     selectedNodeId,
     selectNode,
     highlightedPath,
     isLoading,
   } = useGraphStore();
+
+  const [legendExpanded, setLegendExpanded] = useState(false);
 
   // Convert store data to React Flow format
   const initialNodes = useMemo(() => {
@@ -100,22 +97,12 @@ export function RiskGraph({ className }: RiskGraphProps) {
     selectNode(null);
   }, [selectNode]);
 
-  // Color nodes based on risk level in minimap
-  const nodeColor = useCallback(
-    (node: Node) => {
-      const assessment = assessments.get(node.id);
-      if (!assessment) return '#6B7280';
-      return riskLevelToColor(assessment.overallLevel);
-    },
-    [assessments]
-  );
-
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center h-full ${className}`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
-          <p className="text-gray-500">Loading dependency graph...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">Loading graph...</p>
         </div>
       </div>
     );
@@ -125,15 +112,14 @@ export function RiskGraph({ className }: RiskGraphProps) {
     return (
       <div className={`flex items-center justify-center h-full ${className}`}>
         <div className="text-center text-gray-500">
-          <p>No graph data available.</p>
-          <p className="text-sm mt-2">Search for a vault to visualize its risk dependencies.</p>
+          <p className="text-sm">No graph data available</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div className={`w-full h-full bg-gray-50 ${className}`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -149,23 +135,32 @@ export function RiskGraph({ className }: RiskGraphProps) {
         maxZoom={2}
         attributionPosition="bottom-left"
       >
-        <Controls />
-        <MiniMap
-          nodeColor={nodeColor}
-          maskColor="rgba(0, 0, 0, 0.1)"
-          className="bg-white border rounded-lg shadow-sm"
-        />
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+        {/* Controls - consolidated floating toolbar */}
+        <Controls className="bg-white border rounded-lg shadow-sm" />
 
-        {/* Legend */}
-        <Panel position="top-right" className="bg-white p-3 rounded-lg shadow-sm border">
-          <h4 className="text-xs font-semibold mb-2 text-gray-700">Risk Level</h4>
-          <div className="space-y-1">
-            <LegendItem color="#DC2626" label="Critical (0-20)" />
-            <LegendItem color="#F97316" label="High (21-40)" />
-            <LegendItem color="#EAB308" label="Medium (41-60)" />
-            <LegendItem color="#22C55E" label="Low (61-80)" />
-            <LegendItem color="#10B981" label="Minimal (81-100)" />
+        {/* Simplified Legend - icon-only, expands on hover */}
+        <Panel position="top-right">
+          <div
+            className="bg-white border rounded-lg shadow-sm overflow-hidden transition-all duration-200"
+            onMouseEnter={() => setLegendExpanded(true)}
+            onMouseLeave={() => setLegendExpanded(false)}
+          >
+            {legendExpanded ? (
+              <div className="p-3 space-y-1.5">
+                <h4 className="text-xs font-medium text-gray-500 mb-2">Entity Types</h4>
+                <LegendItem color="#3B82F6" label="Vault" />
+                <LegendItem color="#8B5CF6" label="Protocol" />
+                <LegendItem color="#22C55E" label="Token" />
+                <LegendItem color="#F59E0B" label="Issuer" />
+              </div>
+            ) : (
+              <div className="p-2 flex gap-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              </div>
+            )}
           </div>
         </Panel>
       </ReactFlow>
@@ -177,7 +172,7 @@ function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-2">
       <div
-        className="w-3 h-3 rounded-full"
+        className="w-2.5 h-2.5 rounded-full"
         style={{ backgroundColor: color }}
       />
       <span className="text-xs text-gray-600">{label}</span>

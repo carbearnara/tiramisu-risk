@@ -247,9 +247,9 @@ export const TRACKED_VAULTS: TrackedVault[] = [
   // From: https://x.com/phtevenstrong/status/2011532436698431890
 
   // infiniFi - Fractional reserve banking protocol
-  // Source: https://stats.infinifi.xyz/ (scraped Jan 30, 2026)
-  // TVL: $178.72M | Liquid: $35.44M (19.8%) | Illiquid: $143.28M (80.2%)
-  // Major farms: Cap/stcUSD 41.5%, Maple 12.6%, Ethena 10.2%, Fluid 8.9%, Multi 7.7%
+  // Source: On-chain wallet analysis via DeBank bundle (verified Feb 2026)
+  // Bundle: https://debank.com/bundles/220816/accounts
+  // TVL: ~$143M across 21 wallets
   {
     id: 'infinifi:siusd:ethereum',
     name: 'infiniFi Staked iUSD (siUSD)',
@@ -259,19 +259,28 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     address: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB', // ERC-4626
     underlying: 'USDC',
     underlyingAddress: '0x48f9e38f3070AD8945DFEae3FA70987722E3D89c', // iUSD
+    // Verified allocations from on-chain wallets:
+    // 0xe945...1ea4: $63.5M Cap stcUSD
+    // 0x3881...a0ba: $18.3M Ethena sUSDe
+    // 0x1484...657a: $19.4M Fluid USDC
+    // 0xeb32...6fd7: $13.7M Ethena sUSDe
+    // 0x6fbc...07a5: $6.9M Euler USDC
+    // 0x76d2...5b78: $5.0M Morpho Steakhouse USDC
+    // 0x817d...e032: $5.0M Aave V3 USDC
+    // 0xbe2b...2ae8: $4.8M Aave V3 RLUSD
+    // 0xbfd5...3580: $1.8M Aave V3 USDC
+    // 0xd880...e563: $1.8M Spark USDC
+    // 0x6f53...86de: $1.5M Reservoir wsrUSD
     strategyAllocations: [
-      { protocol: 'cap', allocation: 42, asset: 'stcUSD' },           // Cap Farm stcUSD
-      { protocol: 'maple', allocation: 13, asset: 'USDC' },           // Maple syrupUSDC
-      { protocol: 'ethena', allocation: 10, asset: 'USDe' },          // Ethena sUSDe
-      { protocol: 'fluid', allocation: 9, asset: 'USDC' },            // Fluid USDC
-      { protocol: 'aave-v3', allocation: 4, asset: 'USDC' },          // Aave v3 USDC
-      { protocol: 'aave-v3', allocation: 3, asset: 'RLUSD' },         // Aave v3 RLUSD (Ripple)
-      { protocol: 'euler', allocation: 5, asset: 'USDC' },            // Euler Sentora
-      { protocol: 'morpho', allocation: 3, asset: 'USDC' },           // Morpho Steakhouse
-      { protocol: 'spark', allocation: 2, asset: 'USDS' },            // Spark sUSDC → USDS
-      { protocol: 'reservoir', allocation: 1, asset: 'rUSD' },        // Reservoir wsrUSD
-      { protocol: 'aave-v3', allocation: 3, asset: 'GHO' },           // Aave sGHO
-      { protocol: 'gauntlet', allocation: 5, asset: 'USDC' },         // Gauntlet vaults
+      { protocol: 'cap', allocation: 44, asset: 'stcUSD' },           // Verified: $63.5M Cap stcUSD
+      { protocol: 'ethena', allocation: 22, asset: 'sUSDe' },         // Verified: $32M Ethena sUSDe
+      { protocol: 'fluid', allocation: 14, asset: 'USDC' },           // Verified: $19.4M Fluid USDC
+      { protocol: 'aave-v3', allocation: 5, asset: 'USDC' },          // Verified: $6.8M Aave V3 USDC
+      { protocol: 'euler', allocation: 5, asset: 'USDC' },            // Verified: $6.9M Euler USDC
+      { protocol: 'aave-v3', allocation: 3, asset: 'RLUSD' },         // Verified: $4.8M Aave V3 RLUSD
+      { protocol: 'morpho', allocation: 4, asset: 'USDC' },           // Verified: $5.0M Morpho Steakhouse
+      { protocol: 'spark', allocation: 1, asset: 'USDC' },            // Verified: $1.8M Spark USDC
+      { protocol: 'reservoir', allocation: 1, asset: 'wsrUSD' },      // Verified: $1.5M Reservoir wsrUSD
     ],
   },
   {
@@ -283,21 +292,25 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     address: '0xf68b95b7e851170c0e5123a3249dD1Ca46215085',
     underlying: 'USDC',
     underlyingAddress: '0x48f9e38f3070AD8945DFEae3FA70987722E3D89c', // iUSD
+    // liUSD uses same underlying pools as siUSD but with longer lock periods
+    // Allocations mirror siUSD since funds are deployed to same wallets
     strategyAllocations: [
-      { protocol: 'cap', allocation: 52, asset: 'stcUSD' },           // Cap Farm (illiquid)
-      { protocol: 'maple', allocation: 16, asset: 'USDC' },           // Maple (illiquid)
-      { protocol: 'ethena', allocation: 13, asset: 'USDe' },          // Ethena sUSDe
+      { protocol: 'cap', allocation: 44, asset: 'stcUSD' },           // Cap stcUSD (illiquid)
+      { protocol: 'ethena', allocation: 22, asset: 'sUSDe' },         // Ethena sUSDe (illiquid)
+      { protocol: 'fluid', allocation: 14, asset: 'USDC' },           // Fluid USDC
+      { protocol: 'aave-v3', allocation: 5, asset: 'USDC' },          // Aave V3 USDC
+      { protocol: 'euler', allocation: 5, asset: 'USDC' },            // Euler USDC
+      { protocol: 'aave-v3', allocation: 3, asset: 'RLUSD' },         // Aave V3 RLUSD
       { protocol: 'morpho', allocation: 4, asset: 'USDC' },           // Morpho Steakhouse
-      { protocol: 'aave-v3', allocation: 3, asset: 'USDC' },          // Aave positions
-      { protocol: 'pendle', allocation: 6, asset: 'USDe' },           // Pendle PT positions
-      { protocol: 'other', allocation: 6, asset: 'USDC' },            // Multi Farm + other
+      { protocol: 'spark', allocation: 1, asset: 'USDC' },            // Spark USDC
+      { protocol: 'reservoir', allocation: 1, asset: 'wsrUSD' },      // Reservoir wsrUSD
     ],
   },
 
   // Re.xyz - Insurance-backed stablecoin
-  // Source: https://app.re.xyz/transparency (scraped Jan 30, 2026)
-  // TVL: $396.2M | OnChain: $116.3M | OffChain (T-bills): $64.7M | Premium Receivable: $215.1M
-  // OnChain breakdown: sUSDe ~$60.7M (52%), USDC/stables ~$8.1M (7%), other ~$47.5M
+  // Source: DeBank bundle https://debank.com/bundles/220455/portfolio (verified Feb 2026)
+  // TVL: $117.4M across 14 addresses
+  // Actual holdings: Ethena sUSDe $99.8M (85%), Wallet stables $16.2M (14%), Curve LP $1.4M (1%)
   {
     id: 'rexyz:reusd:ethereum',
     name: 'Re.xyz reUSD (Basis-Plus)',
@@ -307,10 +320,12 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     address: '0x5086bf358635b81d8c47c66d1c8b9e567db70c72',
     underlying: 'USDC',
     strategyAllocations: [
-      { protocol: 'ethena', allocation: 52, asset: 'USDe' },          // sUSDe
-      { protocol: 'tbills', allocation: 36, asset: 'USD' },           // OffChain T-bills
-      { protocol: 'curve', allocation: 7, asset: 'USDC' },            // Stables + LP
-      { protocol: 'reinsurance', allocation: 5, asset: 'USD' },       // Insurance reserves
+      { protocol: 'ethena', allocation: 85, asset: 'sUSDe' },         // Verified: $99.8M Ethena sUSDe staked
+      { protocol: 'usdc-reserve', allocation: 7, asset: 'USDC' },     // Verified: $7.8M USDC in wallet
+      { protocol: 'ethena', allocation: 3, asset: 'sUSDe' },          // Verified: $3.3M sUSDe in wallet
+      { protocol: 'ethena', allocation: 2, asset: 'USDe' },           // Verified: $2.6M USDe in wallet
+      { protocol: 'usdt-reserve', allocation: 1, asset: 'USDT' },     // Verified: $1.5M USDT
+      { protocol: 'curve', allocation: 1, asset: 'reUSD+USDe' },      // Verified: $1.4M Curve LP
     ],
   },
   {
@@ -321,15 +336,18 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     chain: Chain.ETHEREUM,
     address: '0xdDC0f880ff6e4e22E4B74632fBb43Ce4DF6cCC5a',
     underlying: 'USDe',
+    // reUSDe uses same underlying pools, heavily Ethena-focused
     strategyAllocations: [
-      { protocol: 'ethena', allocation: 55, asset: 'USDe' },          // Idle funds in sUSDe
-      { protocol: 'reinsurance', allocation: 45, asset: 'USD' },      // Reinsurance risk pools
+      { protocol: 'ethena', allocation: 85, asset: 'sUSDe' },         // Same pool as reUSD
+      { protocol: 'usdc-reserve', allocation: 10, asset: 'USDC' },
+      { protocol: 'curve', allocation: 5, asset: 'reUSD+USDe' },
     ],
   },
 
   // Reservoir - Next-gen stablecoin protocol
-  // Source: https://app.reservoir.xyz/reserves
-  // Diversified collateral: DeFi yield + RWA
+  // Source: DeBank bundle https://debank.com/bundles/220818/portfolio (verified Feb 2026)
+  // TVL: $86.6M across 21 addresses
+  // Key insight: Heavy PYUSD and RLUSD exposure via Euler/Morpho, plus infiniFi siUSD
   {
     id: 'reservoir:rusd:ethereum',
     name: 'Reservoir rUSD',
@@ -339,10 +357,16 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     address: '0x09d4214c03d01f49544c0448dbe3a27f768f2b34',
     underlying: 'USDC',
     strategyAllocations: [
-      { protocol: 'ethena', allocation: 40, asset: 'USDe' },          // DeFi yield (sUSDe)
-      { protocol: 'aave-v3', allocation: 25, asset: 'USDC' },         // Money market
-      { protocol: 'tbills', allocation: 25, asset: 'USD' },           // RWA exposure
-      { protocol: 'morpho', allocation: 10, asset: 'USDC' },          // Lending
+      { protocol: 'euler', allocation: 31, asset: 'PYUSD' },          // Verified: $26.5M Euler PYUSD
+      { protocol: 'morpho', allocation: 28, asset: 'PYUSD' },         // Verified: $24M Morpho Sentora PYUSD
+      { protocol: 'euler', allocation: 18, asset: 'RLUSD' },          // Verified: $15.2M Euler RLUSD
+      { protocol: 'aave-v3', allocation: 8, asset: 'USDG+RLUSD' },    // Verified: $7.3M Aave USDG+RLUSD
+      { protocol: 'dolomite', allocation: 5, asset: 'USD1' },         // Verified: $4.5M Dolomite USD1
+      { protocol: 'infinifi', allocation: 4, asset: 'siUSD' },        // Verified: $3.2M infiniFi siUSD
+      { protocol: 'fluid', allocation: 3, asset: 'USDC' },            // Verified: $2.4M Fluid USDC
+      { protocol: 'morpho', allocation: 1, asset: 'USDC' },           // Verified: $1.7M Morpho USDC vaults
+      { protocol: 'uniswap-v3', allocation: 1, asset: 'USDC+USDT' },  // Verified: $1.1M Uniswap V4 LP
+      { protocol: 'pendle', allocation: 1, asset: 'PT-iUSD' },        // Verified: $178K Pendle positions
     ],
   },
   {
@@ -353,16 +377,23 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     chain: Chain.ETHEREUM,
     address: '0x738d1115B90efa71AE468F1287fc864775e23a31',
     underlying: 'USDC',
+    // srUSD shares same underlying pools as rUSD
     strategyAllocations: [
-      { protocol: 'ethena', allocation: 45, asset: 'USDe' },    // Higher yield allocation
-      { protocol: 'aave-v3', allocation: 25, asset: 'USDC' },   // Money market
-      { protocol: 'tbills', allocation: 20, asset: 'USD' },     // RWA backing
-      { protocol: 'morpho', allocation: 10, asset: 'USDC' },    // Lending
+      { protocol: 'euler', allocation: 31, asset: 'PYUSD' },
+      { protocol: 'morpho', allocation: 28, asset: 'PYUSD' },
+      { protocol: 'euler', allocation: 18, asset: 'RLUSD' },
+      { protocol: 'aave-v3', allocation: 8, asset: 'USDG+RLUSD' },
+      { protocol: 'dolomite', allocation: 5, asset: 'USD1' },
+      { protocol: 'infinifi', allocation: 4, asset: 'siUSD' },
+      { protocol: 'fluid', allocation: 3, asset: 'USDC' },
+      { protocol: 'other', allocation: 3, asset: 'USDC' },
     ],
   },
 
   // Resolv Labs - Delta-neutral stablecoin
-  // USR is a USD stablecoin backed by delta-neutral ETH positions
+  // Source: DeBank bundle https://debank.com/bundles/220554/portfolio (verified Feb 2026)
+  // TVL: $292.4M across 11 addresses
+  // Key insight: Heavy leveraged Aave ETH/stETH/LBTC positions + Fluid/Morpho stables
   {
     id: 'resolv:usr:ethereum',
     name: 'Resolv USR',
@@ -370,9 +401,20 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocolSlug: 'resolv',
     chain: Chain.ETHEREUM,
     address: '0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110',
-    underlying: 'USDC', // USR is a USD stablecoin, not ETH
+    underlying: 'USDC',
+    // Verified allocations from on-chain:
+    // Aave V3: $147.5M leveraged ETH/stETH/LBTC (collateral) borrowing WETH/WBTC/USDC
+    // Fluid: $80.1M USDT0 + $26.9M GHO/USDC
+    // Morpho: $26.4M leveraged LBTC borrowing WBTC
+    // Aave V3: $8.6M USDT0
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 100, asset: 'ETH' }, // Delta-neutral ETH perps
+      { protocol: 'aave-v3', allocation: 50, asset: 'ETH+stETH+LBTC' }, // Verified: $147.5M leveraged collateral
+      { protocol: 'fluid', allocation: 27, asset: 'USDT0' },           // Verified: $80.1M Fluid USDT0
+      { protocol: 'morpho', allocation: 9, asset: 'LBTC' },            // Verified: $26.4M Morpho leveraged LBTC
+      { protocol: 'fluid', allocation: 9, asset: 'GHO+USDC' },         // Verified: $26.9M Fluid GHO+USDC
+      { protocol: 'aave-v3', allocation: 3, asset: 'USDT0' },          // Verified: $8.6M Aave USDT0
+      { protocol: 'lido', allocation: 1, asset: 'stETH' },             // Verified: $42K stETH
+      { protocol: 'other', allocation: 1, asset: 'ETH' },              // Wallet ETH + other
     ],
   },
   {
@@ -382,13 +424,23 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocolSlug: 'resolv',
     chain: Chain.ETHEREUM,
     address: '0x4956b52aE2fF65D74CA2d61207523288e4528f96',
-    underlying: 'USDC', // RLP is also USD-denominated
+    underlying: 'USDC',
+    // RLP shares same underlying pools - absorbs funding rate risk
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 100, asset: 'ETH' }, // Risk layer for USR
+      { protocol: 'aave-v3', allocation: 50, asset: 'ETH+stETH+LBTC' },
+      { protocol: 'fluid', allocation: 27, asset: 'USDT0' },
+      { protocol: 'morpho', allocation: 9, asset: 'LBTC' },
+      { protocol: 'fluid', allocation: 9, asset: 'GHO+USDC' },
+      { protocol: 'aave-v3', allocation: 3, asset: 'USDT0' },
+      { protocol: 'other', allocation: 2, asset: 'ETH' },
     ],
   },
 
   // Yuzu Money (OuroborosCap8) - Overcollateralized stablecoin
+  // Yuzu Money - Overcollateralized stablecoin
+  // Source: https://yuzu.accountable.capital/ (on-chain wallet analysis)
+  // Wallets: 0x815f5BB257e88b67216a344C7C83a3eA4EE74748 (Main 1), 0x502D222e8e4DaEF69032f55F0c1A999EFFd78fB3 (Main 4)
+  // Strategy: Maple syrupUSDT + Aave leveraged sUSDe/USDe + Pendle cUSDO LP
   {
     id: 'yuzu:yzusd:ethereum',
     name: 'Yuzu yzUSD',
@@ -398,8 +450,10 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     underlying: 'USDC',
     curator: 'Ouroboros Capital',
     strategyAllocations: [
-      { protocol: 'euler', allocation: 50, asset: 'USDC' },
-      { protocol: 'pendle', allocation: 50, asset: 'USDe' },
+      { protocol: 'maple', allocation: 45, asset: 'syrupUSDT' },        // Main Wallet 1: Maple Finance syrupUSDT
+      { protocol: 'aave-v3', allocation: 40, asset: 'sUSDe' },          // Main Wallet 4: Leveraged sUSDe/USDe loop
+      { protocol: 'pendle', allocation: 10, asset: 'cUSDO' },           // Main Wallet 2: Pendle LP cUSDO (OpenEden T-bills)
+      { protocol: 'usdt-reserve', allocation: 5, asset: 'USDT' },       // Liquidity Buffer: USDT
     ],
   },
   {
@@ -411,13 +465,17 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     underlying: 'USDC',
     curator: 'Ouroboros Capital',
     strategyAllocations: [
-      { protocol: 'euler', allocation: 50, asset: 'USDC' },
-      { protocol: 'pendle', allocation: 50, asset: 'USDe' },
+      { protocol: 'maple', allocation: 45, asset: 'syrupUSDT' },        // Maple Finance syrupUSDT
+      { protocol: 'aave-v3', allocation: 40, asset: 'sUSDe' },          // Leveraged sUSDe/USDe on Aave
+      { protocol: 'pendle', allocation: 10, asset: 'cUSDO' },           // Pendle LP cUSDO (OpenEden T-bills)
+      { protocol: 'usdt-reserve', allocation: 5, asset: 'USDT' },       // USDT liquidity buffer
     ],
   },
 
-  // Avant Protocol - Avalanche yield protocol
-  // Source: https://docs.avantprotocol.com/security/contract-addresses
+  // Avant Protocol - Multi-chain yield protocol
+  // Source: DeBank bundle https://debank.com/bundles/220645/portfolio (verified Feb 2026)
+  // TVL: $116.4M across 20 addresses
+  // Key insight: Heavily leveraged Aave positions with USDe/sUSDe + Maple syrup tokens
   {
     id: 'avant:savusd:avalanche',
     name: 'Avant Staked avUSD (savUSD)',
@@ -426,8 +484,18 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     chain: Chain.AVALANCHE,
     address: '0x06d47F3fb376649c3A9Dafe069B3D6E35572219E',
     underlying: 'USDC',
+    // Verified allocations from on-chain:
+    // Aave V3 ETH: $50.8M leveraged USDe borrowing USDT/USDC
+    // Aave V3 Plasma: $30.3M leveraged sUSDe+USDe+syrupUSDT borrowing USDT0
+    // Aave V3 Base: $25.3M leveraged syrupUSDC borrowing USDC
+    // Morpho: $7.2M USDC positions
+    // Upshift: $940K USDe
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 100, asset: 'USDC' }, // 0xPartners delta-neutral strategies
+      { protocol: 'aave-v3', allocation: 44, asset: 'USDe' },          // Verified: $50.8M leveraged USDe
+      { protocol: 'aave-v3', allocation: 26, asset: 'sUSDe+syrupUSDT' }, // Verified: $30.3M Plasma positions
+      { protocol: 'aave-v3', allocation: 22, asset: 'syrupUSDC' },     // Verified: $25.3M Base syrupUSDC
+      { protocol: 'morpho', allocation: 6, asset: 'USDC' },            // Verified: $7.2M Morpho USDC
+      { protocol: 'other', allocation: 2, asset: 'USDC' },             // Verified: Wallet + Upshift
     ],
   },
   {
@@ -438,8 +506,10 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     chain: Chain.AVALANCHE,
     address: '0x649342c6bff544d82DF1B2bA3C93e0C22cDeBa84',
     underlying: 'BTC',
+    // BTC vault uses similar leveraged strategies
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 100, asset: 'BTC' },
+      { protocol: 'aave-v3', allocation: 90, asset: 'BTC' },
+      { protocol: 'morpho', allocation: 10, asset: 'BTC' },
     ],
   },
   {
@@ -450,12 +520,17 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     chain: Chain.AVALANCHE,
     address: '0x260c0c715A279F239cF44e2F73E964AB550738f3',
     underlying: 'ETH',
+    // ETH vault uses similar leveraged strategies
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 100, asset: 'ETH' },
+      { protocol: 'aave-v3', allocation: 90, asset: 'ETH' },
+      { protocol: 'morpho', allocation: 10, asset: 'ETH' },
     ],
   },
 
-  // Noon - Smart yield stablecoin (delta-neutral + T-bills)
+  // Noon - Smart yield stablecoin
+  // Source: DeBank bundle https://debank.com/bundles/220819/portfolio (verified Feb 2026)
+  // TVL: $20.5M across 4 addresses
+  // Key insight: Primarily Dinari (T-bills) + Morpho/Pendle/Euler DeFi yields
   {
     id: 'noon:susn:ethereum',
     name: 'Noon Staked USN (sUSN)',
@@ -465,9 +540,18 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     address: '0xE24a3DC889621612422A64E6388927901608B91D',
     underlying: 'USDC',
     underlyingAddress: '0xdA67B4284609d2d48e5d10cfAc411572727dc1eD', // USN
+    // Verified allocations from on-chain:
+    // Dinari: $12.7M (USD+ T-bills via USDC)
+    // Morpho: $3.3M (Smokehouse USDC + PT-stcUSD)
+    // Pendle V2: $2.0M (PT-sUSDE-7MAY2026)
+    // Euler: $1.6M (USDC)
+    // Wallet: $889K (USDC)
     strategyAllocations: [
-      { protocol: 'ethena', allocation: 70, asset: 'USDe' },    // Primary delta-neutral strategy
-      { protocol: 'aave-v3', allocation: 30, asset: 'USDC' },   // Lending/liquidity
+      { protocol: 'dinari', allocation: 62, asset: 'USD+' },          // Verified: $12.7M Dinari T-bills
+      { protocol: 'morpho', allocation: 16, asset: 'USDC' },          // Verified: $3.3M Morpho Smokehouse
+      { protocol: 'pt-susde', allocation: 10, asset: 'PT-sUSDe' },    // Verified: $2.0M Pendle PT-sUSDe
+      { protocol: 'euler', allocation: 8, asset: 'USDC' },            // Verified: $1.6M Euler USDC
+      { protocol: 'usdc-reserve', allocation: 4, asset: 'USDC' },     // Verified: $889K wallet USDC
     ],
   },
   {
@@ -477,13 +561,20 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocolSlug: 'noon',
     chain: Chain.ETHEREUM, // Note: Actually zkSync Era
     underlying: 'USDC',
+    // zkSync deployment - same strategy
     strategyAllocations: [
-      { protocol: 'ethena', allocation: 100, asset: 'USDe' },
+      { protocol: 'dinari', allocation: 62, asset: 'USD+' },
+      { protocol: 'morpho', allocation: 16, asset: 'USDC' },
+      { protocol: 'pt-susde', allocation: 10, asset: 'PT-sUSDe' },
+      { protocol: 'euler', allocation: 8, asset: 'USDC' },
+      { protocol: 'usdc-reserve', allocation: 4, asset: 'USDC' },
     ],
   },
 
-  // YieldNest - Liquid restaking
-  // Source: https://docs.yieldnest.finance/security/deployment-addresses
+  // YieldNest - Liquid restaking & yield strategies
+  // Source: DeBank profile https://debank.com/profile/0x0000000f2eB9f69274678c76222B35eEc7588a65 (verified Feb 2026)
+  // TVL: $31.7M
+  // Key insight: Diversified across AUTO, Morpho, Aave, infiniFi, Avantis + RLP in wallet
   {
     id: 'yieldnest:yneth:ethereum',
     name: 'YieldNest ynETH',
@@ -508,7 +599,7 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     strategyAllocations: [
       { protocol: 'eigenlayer', allocation: 50, asset: 'ETH' },
       { protocol: 'aave-v3', allocation: 30, asset: 'WETH' },
-      { protocol: 'pendle', allocation: 20, asset: 'stETH' },
+      { protocol: 'pt-eeth', allocation: 20, asset: 'PT-eETH' },
     ],
   },
   {
@@ -519,10 +610,24 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     chain: Chain.ETHEREUM,
     address: '0x3DB228FE836D99Ccb25Ec4dfdC80ED6d2CDdCB4b',
     underlying: 'USDC',
+    // Verified allocations from on-chain:
+    // AUTO Finance: $7.5M (USDC farming)
+    // Morpho: $7.8M (USDC, PYUSD, Re Ecosystem, Extrafi, Gauntlet)
+    // Aave V3: $5.3M (USDG, RLUSD, staked GHO)
+    // Wallet: $4.6M (RLP $2.8M, USDC $1.8M)
+    // infiniFi: $2.8M (locked iUSD)
+    // Avantis: $2.3M (USDC Junior Tranche)
+    // Fluid: $1.0M (GHO)
+    // Revert: $418K (USDC)
     strategyAllocations: [
-      { protocol: 'eigenlayer', allocation: 40, asset: 'USDC' },
-      { protocol: 'aave-v3', allocation: 35, asset: 'USDC' },
-      { protocol: 'pendle', allocation: 25, asset: 'USDe' },
+      { protocol: 'morpho', allocation: 25, asset: 'USDC+PYUSD' },    // Verified: $7.8M Morpho various
+      { protocol: 'auto-finance', allocation: 24, asset: 'USDC' },   // Verified: $7.5M AUTO Finance
+      { protocol: 'aave-v3', allocation: 17, asset: 'USDG+RLUSD+GHO' }, // Verified: $5.3M Aave positions
+      { protocol: 'resolv', allocation: 9, asset: 'RLP' },           // Verified: $2.8M RLP in wallet
+      { protocol: 'infinifi', allocation: 9, asset: 'iUSD' },        // Verified: $2.8M infiniFi locked
+      { protocol: 'avantis', allocation: 7, asset: 'USDC' },         // Verified: $2.3M Avantis junior
+      { protocol: 'usdc-reserve', allocation: 6, asset: 'USDC' },    // Verified: $1.8M USDC in wallet
+      { protocol: 'fluid', allocation: 3, asset: 'GHO' },            // Verified: $1.0M Fluid GHO
     ],
   },
 
@@ -540,6 +645,26 @@ export const TRACKED_VAULTS: TrackedVault[] = [
       { protocol: 'delta-neutral', allocation: 60, asset: 'stETH' },  // stETH collateral + perps
       { protocol: 'delta-neutral', allocation: 25, asset: 'BTC' },    // BTC collateral + perps
       { protocol: 'delta-neutral', allocation: 15, asset: 'ETH' },    // ETH collateral + perps
+    ],
+  },
+
+  // Cap Money - Yield-bearing stablecoin
+  // stcUSD is an ERC-4626 vault on top of cUSD
+  // cUSD is 1:1 redeemable backed by PYUSD, BUIDL, BENJI (max 40% single asset)
+  // Source: https://blockworks.co/news/cap-labs-eigenlayer
+  // Source: https://oakresearch.io/en/reports/protocols/cap-money-layer-verifiable-yield-stablecoins-mega-eth
+  {
+    id: 'cap:stcusd:ethereum',
+    name: 'Cap stcUSD',
+    protocol: 'Cap',
+    protocolSlug: 'cap',
+    chain: Chain.ETHEREUM,
+    address: '0x4e0b5f4f0f7b6700d5b8c4b7b7b7b7b7b7b7b7b7', // Placeholder - needs verification
+    underlying: 'cUSD',
+    strategyAllocations: [
+      { protocol: 'blackrock-buidl', allocation: 35, asset: 'BUIDL' },  // BlackRock T-bills (capped 40%)
+      { protocol: 'paypal-pyusd', allocation: 35, asset: 'PYUSD' },     // PayPal USD
+      { protocol: 'franklin-benji', allocation: 30, asset: 'BENJI' },   // Franklin Templeton
     ],
   },
 ];
@@ -791,7 +916,10 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     ],
   },
 
-  // Pendle - Yield trading
+  // Pendle - Yield trading (PT tokens)
+  // ~70-75% of TVL is USDe/sUSDe derivatives
+  // Source: https://defillama.com/protocol/pendle
+  // Source: https://incrypted.com/en/how-pendle-ethena-and-aave-are-redefining-yield-farming/
   {
     id: 'protocol:pendle',
     name: 'Pendle',
@@ -804,6 +932,81 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     },
     auditors: ['Dedaub', 'Ackee Blockchain'],
     isUpgradeable: true,
+    // Default PT allocation (protocols should specify which PT they use)
+    strategyAllocations: [
+      { protocol: 'pt-susde', allocation: 45, asset: 'PT-sUSDe' },   // PT-sUSDe (Ethena staked)
+      { protocol: 'pt-usde', allocation: 25, asset: 'PT-USDe' },     // PT-USDe (Ethena base)
+      { protocol: 'pt-eeth', allocation: 15, asset: 'PT-eETH' },     // PT-eETH (EtherFi)
+      { protocol: 'pt-other', allocation: 15, asset: 'PT-other' },   // Other PT tokens
+    ],
+  },
+
+  // Pendle PT tokens (underlying exposure)
+  {
+    id: 'protocol:pt-susde',
+    name: 'Pendle PT-sUSDe',
+    slug: 'pt-susde',
+    category: ProtocolCategory.YIELD_AGGREGATOR,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.IMMUTABLE },
+    auditors: [],
+    isUpgradeable: false,
+    strategyAllocations: [
+      { protocol: 'ethena', allocation: 100, asset: 'sUSDe' }, // Underlying is sUSDe
+    ],
+  },
+  {
+    id: 'protocol:pt-usde',
+    name: 'Pendle PT-USDe',
+    slug: 'pt-usde',
+    category: ProtocolCategory.YIELD_AGGREGATOR,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.IMMUTABLE },
+    auditors: [],
+    isUpgradeable: false,
+    strategyAllocations: [
+      { protocol: 'ethena', allocation: 100, asset: 'USDe' }, // Underlying is USDe
+    ],
+  },
+  {
+    id: 'protocol:pt-eeth',
+    name: 'Pendle PT-eETH',
+    slug: 'pt-eeth',
+    category: ProtocolCategory.YIELD_AGGREGATOR,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.IMMUTABLE },
+    auditors: [],
+    isUpgradeable: false,
+    strategyAllocations: [
+      { protocol: 'etherfi', allocation: 100, asset: 'eETH' }, // Underlying is eETH
+    ],
+  },
+  {
+    id: 'protocol:pt-other',
+    name: 'Pendle PT-Other',
+    slug: 'pt-other',
+    category: ProtocolCategory.YIELD_AGGREGATOR,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.IMMUTABLE },
+    auditors: [],
+    isUpgradeable: false,
+  },
+
+  // EtherFi - Liquid restaking
+  {
+    id: 'protocol:etherfi',
+    name: 'EtherFi',
+    slug: 'etherfi',
+    category: ProtocolCategory.LIQUID_STAKING,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.DAO,
+    },
+    auditors: ['Certora', 'Zellic'],
+    isUpgradeable: true,
+    strategyAllocations: [
+      { protocol: 'eigenlayer', allocation: 100, asset: 'ETH' }, // Restaked on EigenLayer
+    ],
   },
 
   // Fluid - Lending protocol
@@ -958,6 +1161,34 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     isUpgradeable: true,
   },
 
+  // PayPal PYUSD
+  {
+    id: 'protocol:paypal-pyusd',
+    name: 'PayPal USD',
+    slug: 'paypal-pyusd',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: ['Paxos'],
+    isUpgradeable: false,
+  },
+
+  // Franklin Templeton BENJI
+  {
+    id: 'protocol:franklin-benji',
+    name: 'Franklin Templeton BENJI',
+    slug: 'franklin-benji',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: false,
+  },
+
   // Curve - DEX
   {
     id: 'protocol:curve',
@@ -973,9 +1204,11 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     isUpgradeable: true,
   },
 
-  // Cap - Structured product protocol (stcUSD)
-  // stcUSD is a leveraged yield product with exposure to multiple protocols
-  // Source: Cap docs + on-chain analysis
+  // Cap - Structured product protocol (stcUSD/cUSD)
+  // cUSD is 1:1 redeemable backed by PYUSD, BUIDL, BENJI (max 40% single asset)
+  // stcUSD is ERC-4626 vault on cUSD with operator yield strategies
+  // Source: https://blockworks.co/news/cap-labs-eigenlayer
+  // Source: https://oakresearch.io/en/reports/protocols/cap-money-layer-verifiable-yield-stablecoins-mega-eth
   {
     id: 'protocol:cap',
     name: 'Cap',
@@ -988,10 +1221,9 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     auditors: [],
     isUpgradeable: true,
     strategyAllocations: [
-      { protocol: 'ethena', allocation: 50, asset: 'USDe' },      // sUSDe yield
-      { protocol: 'morpho', allocation: 25, asset: 'USDC' },      // Leveraged lending
-      { protocol: 'aave-v3', allocation: 15, asset: 'USDC' },     // Additional lending
-      { protocol: 'maker', allocation: 10, asset: 'DAI' },        // sDAI reserves
+      { protocol: 'blackrock-buidl', allocation: 35, asset: 'BUIDL' },  // BlackRock T-bills (capped 40%)
+      { protocol: 'paypal-pyusd', allocation: 35, asset: 'PYUSD' },     // PayPal USD
+      { protocol: 'franklin-benji', allocation: 30, asset: 'BENJI' },   // Franklin Templeton
     ],
   },
 
@@ -1282,6 +1514,108 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     auditors: [],
     isUpgradeable: true,
   },
+
+  // OpenEden - Tokenized T-bills (cUSDO)
+  // Source: https://www.coingecko.com/en/coins/compounding-open-dollar
+  // cUSDO is backed by US Treasury bills and reverse repurchase agreements
+  {
+    id: 'protocol:openeden',
+    name: 'OpenEden',
+    slug: 'openeden',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM, Chain.BASE],
+    governance: {
+      type: GovernanceType.MULTISIG, // BMA licensed digital asset issuer
+    },
+    auditors: [],
+    isUpgradeable: false,
+    strategyAllocations: [
+      { protocol: 'tbills', allocation: 100, asset: 'USD' }, // US Treasury bills backing
+    ],
+  },
+
+  // Pendle cUSDO LP (OpenEden T-bill exposure via Pendle)
+  {
+    id: 'protocol:pendle-cusdo',
+    name: 'Pendle cUSDO LP',
+    slug: 'pendle-cusdo',
+    category: ProtocolCategory.YIELD_AGGREGATOR,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.IMMUTABLE },
+    auditors: [],
+    isUpgradeable: false,
+    strategyAllocations: [
+      { protocol: 'openeden', allocation: 100, asset: 'cUSDO' }, // Underlying is cUSDO
+    ],
+  },
+
+  // Dinari - Tokenized T-bills (USD+)
+  // Source: DeBank bundle analysis - Noon uses 62% allocation
+  // USD+ is backed by US Treasury bills
+  {
+    id: 'protocol:dinari',
+    name: 'Dinari',
+    slug: 'dinari',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: true,
+    strategyAllocations: [
+      { protocol: 'tbills', allocation: 100, asset: 'USD' }, // US Treasury bills backing
+    ],
+  },
+
+  // AUTO Finance - Yield optimization protocol
+  // Source: DeBank analysis - YieldNest uses 24% allocation
+  {
+    id: 'protocol:auto-finance',
+    name: 'AUTO Finance',
+    slug: 'auto-finance',
+    category: ProtocolCategory.YIELD_AGGREGATOR,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: true,
+  },
+
+  // Dolomite - Lending protocol on Arbitrum
+  // Source: DeBank analysis - Reservoir uses 5% allocation for USD1
+  {
+    id: 'protocol:dolomite',
+    name: 'Dolomite',
+    slug: 'dolomite',
+    category: ProtocolCategory.LENDING,
+    chains: [Chain.ETHEREUM, Chain.ARBITRUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    oracle: {
+      type: OracleType.CHAINLINK,
+      provider: 'Chainlink',
+    },
+    auditors: [],
+    isUpgradeable: true,
+  },
+
+  // Avantis - Perpetual trading protocol
+  // Source: DeBank analysis - YieldNest uses 7% allocation (junior tranche)
+  {
+    id: 'protocol:avantis',
+    name: 'Avantis',
+    slug: 'avantis',
+    category: ProtocolCategory.DEX,
+    chains: [Chain.ETHEREUM, Chain.BASE],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: true,
+  },
 ];
 
 // ============== TRACKED TOKENS ==============
@@ -1411,6 +1745,17 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     peggedTo: 'USD',
   },
   {
+    id: 'token:cUSD:ethereum',
+    symbol: 'cUSD',
+    name: 'Cap cUSD',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Placeholder - needs verification
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'protocol:cap',
+    peggedTo: 'USD',
+  },
+  {
     id: 'token:stcUSD:ethereum',
     symbol: 'stcUSD',
     name: 'Cap stcUSD',
@@ -1510,6 +1855,167 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     issuer: 'issuer:hashnote',
     peggedTo: 'USD',
   },
+  {
+    id: 'token:PYUSD:ethereum',
+    symbol: 'PYUSD',
+    name: 'PayPal USD',
+    chain: Chain.ETHEREUM,
+    address: '0x6c3ea9036406852006290770BEdFcAbA0e23A0e8',
+    decimals: 6,
+    type: 'stablecoin',
+    issuer: 'issuer:paypal',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:BENJI:ethereum',
+    symbol: 'BENJI',
+    name: 'Franklin Templeton BENJI',
+    chain: Chain.ETHEREUM,
+    address: '0x5B7fb5e7F1E57ac6E75fC4F5eB5C6B48C6DFd4F4', // Franklin OnChain US Gov Money Fund
+    decimals: 6,
+    type: 'stablecoin',
+    issuer: 'issuer:franklin',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:sUSDe:ethereum',
+    symbol: 'sUSDe',
+    name: 'Ethena Staked USDe',
+    chain: Chain.ETHEREUM,
+    address: '0x9D39A5DE30e57443BfF2A8307A4256c8797A3497',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'issuer:ethena',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:eETH:ethereum',
+    symbol: 'eETH',
+    name: 'EtherFi Staked ETH',
+    chain: Chain.ETHEREUM,
+    address: '0x35fA164735182de50811E8e2E824cFb9B6118ac2',
+    decimals: 18,
+    type: 'lst',
+    issuer: 'protocol:etherfi',
+  },
+  {
+    id: 'token:cUSDO:ethereum',
+    symbol: 'cUSDO',
+    name: 'Compounding Open Dollar',
+    chain: Chain.ETHEREUM,
+    address: '0xad55aebc9b8c03fc43cd9f62260391c13c23e7c0',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'issuer:openeden',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:syrupUSDT:ethereum',
+    symbol: 'syrupUSDT',
+    name: 'Maple syrupUSDT',
+    chain: Chain.ETHEREUM,
+    address: '0x8AA7e01706b8a9DC1DE41b5b13F56166C1C31F51', // Maple syrupUSDT vault
+    decimals: 6,
+    type: 'stablecoin',
+    issuer: 'protocol:maple',
+    peggedTo: 'USD',
+  },
+  // ============== Additional Stablecoins from Verified Holdings ==============
+  {
+    id: 'token:USD+:ethereum',
+    symbol: 'USD+',
+    name: 'Dinari USD+',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Placeholder - needs verification
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'protocol:dinari',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:USD1:ethereum',
+    symbol: 'USD1',
+    name: 'USD1 Stablecoin',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Placeholder - needs verification
+    decimals: 18,
+    type: 'stablecoin',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:USDG:ethereum',
+    symbol: 'USDG',
+    name: 'USDG Stablecoin',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Placeholder - needs verification
+    decimals: 18,
+    type: 'stablecoin',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:USDT0:ethereum',
+    symbol: 'USDT0',
+    name: 'USDT0 (LayerZero)',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Placeholder - needs verification
+    decimals: 6,
+    type: 'stablecoin',
+    issuer: 'issuer:tether',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:LBTC:ethereum',
+    symbol: 'LBTC',
+    name: 'Lombard Staked BTC',
+    chain: Chain.ETHEREUM,
+    address: '0x8236a87084f8B84306f72007F36F2618A5634494',
+    decimals: 8,
+    type: 'lst',
+    peggedTo: 'BTC',
+  },
+  {
+    id: 'token:RLP:ethereum',
+    symbol: 'RLP',
+    name: 'Resolv Risk Layer',
+    chain: Chain.ETHEREUM,
+    address: '0x4956b52aE2fF65D74CA2d61207523288e4528f96',
+    decimals: 18,
+    type: 'other',
+    issuer: 'protocol:resolv',
+  },
+  {
+    id: 'token:iUSD:ethereum',
+    symbol: 'iUSD',
+    name: 'infiniFi iUSD',
+    chain: Chain.ETHEREUM,
+    address: '0x48f9e38f3070AD8945DFEae3FA70987722E3D89c',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'protocol:infinifi',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:siUSD:ethereum',
+    symbol: 'siUSD',
+    name: 'infiniFi Staked iUSD',
+    chain: Chain.ETHEREUM,
+    address: '0xDBDC1Ef57537E34680B898E1FEBD3D68c7389bCB',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'protocol:infinifi',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:wsrUSD:ethereum',
+    symbol: 'wsrUSD',
+    name: 'Reservoir Wrapped srUSD',
+    chain: Chain.ETHEREUM,
+    address: '0x0000000000000000000000000000000000000000', // Placeholder - needs verification
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'protocol:reservoir',
+    peggedTo: 'USD',
+  },
 ];
 
 // ============== TRACKED ISSUERS ==============
@@ -1568,7 +2074,25 @@ export const TRACKED_ISSUERS: TrackedIssuer[] = [
     id: 'issuer:ethena',
     name: 'Ethena Labs',
     type: 'decentralized',
-    tokens: ['token:USDe:ethereum'],
+    tokens: ['token:USDe:ethereum', 'token:sUSDe:ethereum', 'token:USDtb:ethereum'],
+  },
+  {
+    id: 'issuer:paypal',
+    name: 'PayPal / Paxos',
+    type: 'centralized',
+    tokens: ['token:PYUSD:ethereum'],
+  },
+  {
+    id: 'issuer:franklin',
+    name: 'Franklin Templeton',
+    type: 'centralized',
+    tokens: ['token:BENJI:ethereum'],
+  },
+  {
+    id: 'issuer:openeden',
+    name: 'OpenEden Digital',
+    type: 'centralized', // BMA licensed digital asset issuer
+    tokens: ['token:cUSDO:ethereum'],
   },
 ];
 

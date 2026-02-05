@@ -2,18 +2,12 @@
 
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import {
-  Entity,
-  EntityType,
-  RiskAssessment,
-  riskLevelToColor,
-} from '@/types/core';
-import { Badge } from '@/components/ui/badge';
+import { Entity, EntityType, RiskAssessment, riskLevelToColor } from '@/types/core';
 
 interface GenericNodeData {
   entity: Entity;
   riskAssessment?: RiskAssessment;
-  exposure: number; // USD exposure from root vault
+  exposure: number;
   isRoot: boolean;
   expanded: boolean;
 }
@@ -23,141 +17,64 @@ interface GenericNodeProps {
   selected?: boolean;
 }
 
-const entityTypeConfig: Record<
-  EntityType,
-  { bg: string; label: string; badgeColor: string }
-> = {
-  [EntityType.VAULT]: {
-    bg: 'bg-white',
-    label: 'Vault',
-    badgeColor: 'bg-blue-100 text-blue-700',
-  },
-  [EntityType.PROTOCOL]: {
-    bg: 'bg-blue-50',
-    label: 'Protocol',
-    badgeColor: 'bg-blue-100 text-blue-700',
-  },
-  [EntityType.TOKEN]: {
-    bg: 'bg-green-50',
-    label: 'Token',
-    badgeColor: 'bg-green-100 text-green-700',
-  },
-  [EntityType.ORACLE]: {
-    bg: 'bg-yellow-50',
-    label: 'Oracle',
-    badgeColor: 'bg-yellow-100 text-yellow-700',
-  },
-  [EntityType.ISSUER]: {
-    bg: 'bg-orange-50',
-    label: 'Issuer',
-    badgeColor: 'bg-orange-100 text-orange-700',
-  },
-  [EntityType.BRIDGE]: {
-    bg: 'bg-purple-50',
-    label: 'Bridge',
-    badgeColor: 'bg-purple-100 text-purple-700',
-  },
-  [EntityType.GOVERNANCE]: {
-    bg: 'bg-pink-50',
-    label: 'Governance',
-    badgeColor: 'bg-pink-100 text-pink-700',
-  },
-  [EntityType.CUSTODIAN]: {
-    bg: 'bg-red-50',
-    label: 'Custodian',
-    badgeColor: 'bg-red-100 text-red-700',
-  },
+// Entity type colors
+const entityTypeColors: Record<EntityType, string> = {
+  [EntityType.VAULT]: 'bg-blue-500',
+  [EntityType.PROTOCOL]: 'bg-purple-500',
+  [EntityType.TOKEN]: 'bg-green-500',
+  [EntityType.ORACLE]: 'bg-yellow-500',
+  [EntityType.ISSUER]: 'bg-amber-500',
+  [EntityType.BRIDGE]: 'bg-indigo-500',
+  [EntityType.GOVERNANCE]: 'bg-pink-500',
+  [EntityType.CUSTODIAN]: 'bg-red-500',
 };
 
 function formatCurrency(value: number): string {
-  if (value >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(2)}B`;
-  }
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(2)}M`;
-  }
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
+  return `$${value.toFixed(0)}`;
 }
 
 export const GenericNode = memo(({ data, selected }: GenericNodeProps) => {
   const { entity, riskAssessment, exposure, isRoot } = data;
-  const borderColor = riskAssessment
-    ? riskLevelToColor(riskAssessment.overallLevel)
-    : '#9CA3AF';
-
-  const config = entityTypeConfig[entity.type] ?? {
-    bg: 'bg-gray-50',
-    label: entity.type,
-    badgeColor: 'bg-gray-100 text-gray-700',
-  };
+  const riskColor = riskAssessment ? riskLevelToColor(riskAssessment.overallLevel) : '#9CA3AF';
+  const dotColor = entityTypeColors[entity.type] || 'bg-gray-500';
 
   return (
     <div
       className={`
-        px-3 py-2 rounded-lg border-2 ${config.bg} shadow-md
-        min-w-[140px] max-w-[200px]
-        transition-all duration-200
-        ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
-        ${isRoot ? 'border-4' : ''}
+        px-3 py-2 rounded-lg bg-white border shadow-sm
+        min-w-[80px] max-w-[100px]
+        transition-all duration-150
+        ${selected ? 'ring-2 ring-blue-500' : ''}
+        ${isRoot ? 'border-2 border-gray-400' : 'border-gray-200'}
       `}
-      style={{ borderColor }}
     >
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="w-3 h-3 !bg-gray-400"
-      />
+      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-gray-300" />
 
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-1">
-        {entity.metadata.logo && (
-          <img
-            src={entity.metadata.logo as string}
-            alt={entity.name}
-            className="w-4 h-4 rounded-full"
-          />
-        )}
-        <span className="font-semibold text-xs truncate flex-1">
-          {entity.name}
-        </span>
+      {/* Entity type indicator + Name */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <div className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
+        <span className="font-medium text-xs truncate">{entity.name}</span>
       </div>
 
-      {/* Exposure */}
+      {/* Exposure - Key metric (only if > 0) */}
       {exposure > 0 && (
-        <div className="text-xs font-medium text-gray-700 mb-1">
+        <div className="text-sm font-semibold text-gray-900">
           {formatCurrency(exposure)}
         </div>
       )}
 
-      {/* Type Badge */}
-      <Badge
-        variant="outline"
-        className={`text-[10px] px-1.5 py-0 ${config.badgeColor}`}
-      >
-        {config.label}
-      </Badge>
-
-      {/* Risk Indicator */}
+      {/* Risk indicator dot */}
       {riskAssessment && (
-        <div className="mt-2 flex items-center gap-1">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: borderColor }}
-          />
-          <span className="text-[10px] text-gray-600">
-            {Math.round(riskAssessment.overallScore)}
-          </span>
-        </div>
+        <div
+          className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"
+          style={{ backgroundColor: riskColor }}
+        />
       )}
 
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="w-3 h-3 !bg-gray-400"
-      />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-gray-300" />
     </div>
   );
 });

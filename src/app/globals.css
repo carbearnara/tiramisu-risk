@@ -48,6 +48,16 @@
 
 :root {
   --radius: 0.625rem;
+
+  /* Entity type colors */
+  --entity-vault: #3B82F6;
+  --entity-protocol: #8B5CF6;
+  --entity-token: #22C55E;
+  --entity-issuer: #F59E0B;
+  --entity-oracle: #EAB308;
+  --entity-bridge: #6366F1;
+  --entity-governance: #EC4899;
+  --entity-custodian: #EF4444;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
