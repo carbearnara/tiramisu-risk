@@ -472,6 +472,25 @@ export const TRACKED_VAULTS: TrackedVault[] = [
       { protocol: 'usdt-reserve', allocation: 5, asset: 'USDT' },       // USDT liquidity buffer
     ],
   },
+  // Yuzu Protection Pool (yzPP) - Junior Tranche
+  // Source: https://app.yuzu.money/yzpp
+  // First-loss tranche offering higher yields in exchange for increased risk exposure
+  {
+    id: 'yuzu:yzpp:ethereum',
+    name: 'Yuzu Protection Pool (yzPP)',
+    protocol: 'Yuzu Money',
+    protocolSlug: 'yuzu-money',
+    chain: Chain.ETHEREUM,
+    underlying: 'USDC',
+    curator: 'Ouroboros Capital',
+    // Junior tranche absorbs first losses, same underlying strategies as yzUSD
+    strategyAllocations: [
+      { protocol: 'maple', allocation: 45, asset: 'syrupUSDT' },        // Maple Finance syrupUSDT
+      { protocol: 'aave-v3', allocation: 40, asset: 'sUSDe' },          // Leveraged sUSDe/USDe on Aave
+      { protocol: 'pendle', allocation: 10, asset: 'cUSDO' },           // Pendle LP cUSDO (OpenEden T-bills)
+      { protocol: 'usdt-reserve', allocation: 5, asset: 'USDT' },       // USDT liquidity buffer
+    ],
+  },
 
   // Avant Protocol - Multi-chain yield protocol
   // Source: DeBank bundle https://debank.com/bundles/220645/portfolio (verified Feb 2026)
@@ -666,6 +685,28 @@ export const TRACKED_VAULTS: TrackedVault[] = [
       { protocol: 'blackrock-buidl', allocation: 35, asset: 'BUIDL' },  // BlackRock T-bills (capped 40%)
       { protocol: 'paypal-pyusd', allocation: 35, asset: 'PYUSD' },     // PayPal USD
       { protocol: 'franklin-benji', allocation: 30, asset: 'BENJI' },   // Franklin Templeton
+    ],
+  },
+
+  // USD.ai - AI infrastructure-backed yield stablecoin
+  // Source: https://usd.ai/
+  // Source: https://app.rwa.xyz/assets/USDai
+  // TVL: ~$508M on Arbitrum
+  // USDai is backed by M^0 T-bills, yield from AI infrastructure/GPU loans (CALIBER)
+  {
+    id: 'usdai:susdai:arbitrum',
+    name: 'USD.ai Staked USDai (sUSDai)',
+    protocol: 'USD.ai',
+    protocolSlug: 'usd-ai',
+    chain: Chain.ARBITRUM,
+    address: '0x0B2b2B2076d95dda7817e785989fE353fe955ef9', // sUSDai ERC-4626 vault
+    underlying: 'USDai',
+    underlyingAddress: '0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef',
+    // Yield from AI infrastructure loans collateralized by GPU hardware
+    // Base collateral is M^0 T-bills for USDai redemptions
+    strategyAllocations: [
+      { protocol: 'm0-tbills', allocation: 70, asset: 'M0' },           // M^0 T-bill backing for redemptions
+      { protocol: 'ai-infrastructure', allocation: 30, asset: 'GPU' },  // AI infrastructure loans (yield source)
     ],
   },
 ];
@@ -1617,6 +1658,59 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     auditors: [],
     isUpgradeable: true,
   },
+
+  // USD.ai - AI infrastructure-backed yield stablecoin
+  // Source: https://usd.ai/
+  // TVL: ~$508M on Arbitrum
+  {
+    id: 'protocol:usd-ai',
+    name: 'USD.ai',
+    slug: 'usd-ai',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ARBITRUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: true,
+    strategyAllocations: [
+      { protocol: 'm0-tbills', allocation: 70, asset: 'M0' },           // M^0 T-bill backing
+      { protocol: 'ai-infrastructure', allocation: 30, asset: 'GPU' },  // AI/GPU loan yield
+    ],
+  },
+
+  // M^0 Protocol - Tokenized T-bills
+  // Source: https://m0.org/
+  {
+    id: 'protocol:m0-tbills',
+    name: 'M^0 Protocol',
+    slug: 'm0-tbills',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM, Chain.ARBITRUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: false,
+    strategyAllocations: [
+      { protocol: 'tbills', allocation: 100, asset: 'USD' },  // US Treasury backing
+    ],
+  },
+
+  // AI Infrastructure Loans (CALIBER)
+  // Loans collateralized by GPU hardware and AI compute assets
+  {
+    id: 'protocol:ai-infrastructure',
+    name: 'AI Infrastructure Loans',
+    slug: 'ai-infrastructure',
+    category: ProtocolCategory.LENDING,
+    chains: [Chain.ARBITRUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: false, // Off-chain collateralized loans
+  },
 ];
 
 // ============== TRACKED TOKENS ==============
@@ -2020,6 +2114,30 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     type: 'stablecoin',
     issuer: 'protocol:reservoir',
     peggedTo: 'USD',
+  },
+  // USD.ai tokens on Arbitrum
+  {
+    id: 'token:USDai:arbitrum',
+    symbol: 'USDai',
+    name: 'USD.ai USDai',
+    chain: Chain.ARBITRUM,
+    address: '0x0a1a1a107e45b7ced86833863f482bc5f4ed82ef',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'protocol:usd-ai',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:sUSDai:arbitrum',
+    symbol: 'sUSDai',
+    name: 'USD.ai Staked USDai',
+    chain: Chain.ARBITRUM,
+    address: '0x0B2b2B2076d95dda7817e785989fE353fe955ef9',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'protocol:usd-ai',
+    peggedTo: 'USD',
+    collateral: ['token:USDai:arbitrum'], // sUSDai is backed by staked USDai
   },
 ];
 
