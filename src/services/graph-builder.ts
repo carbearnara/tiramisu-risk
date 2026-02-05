@@ -417,7 +417,7 @@ export class GraphBuilder {
   /**
    * Create TokenEntity from TrackedToken
    */
-  private createTokenEntity(token: { id: string; symbol: string; name: string; chain: Chain; type: string; issuer?: string; peggedTo?: string; decimals?: number }): TokenEntity {
+  private createTokenEntity(token: { id: string; symbol: string; name: string; chain: Chain; type: string; issuer?: string; peggedTo?: string; decimals?: number; collateral?: string[] }): TokenEntity {
     return {
       id: token.id,
       type: EntityType.TOKEN,
@@ -428,6 +428,7 @@ export class GraphBuilder {
       issuerId: token.issuer,
       peggedTo: token.peggedTo,
       decimals: token.decimals ?? (token.symbol === 'USDC' || token.symbol === 'USDT' ? 6 : 18),
+      collateral: token.collateral, // Pass through collateral relationships (e.g., sUSDe → USDe)
       metadata: {},
     };
   }

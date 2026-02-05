@@ -57,6 +57,7 @@ export interface TrackedToken {
   type: 'stablecoin' | 'lst' | 'lrt' | 'native' | 'wrapped' | 'governance' | 'other';
   issuer?: string;
   peggedTo?: string;
+  collateral?: string[]; // Token IDs this token is backed by (e.g., sUSDe → USDe)
 }
 
 export interface TrackedIssuer {
@@ -1765,6 +1766,7 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     type: 'stablecoin',
     issuer: 'protocol:cap',
     peggedTo: 'USD',
+    collateral: ['token:cUSD:ethereum'], // stcUSD is backed by staked cUSD
   },
   {
     id: 'token:rUSD:ethereum',
@@ -1887,6 +1889,7 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     type: 'stablecoin',
     issuer: 'issuer:ethena',
     peggedTo: 'USD',
+    collateral: ['token:USDe:ethereum'], // sUSDe is backed by staked USDe
   },
   {
     id: 'token:eETH:ethereum',
@@ -1919,6 +1922,7 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     type: 'stablecoin',
     issuer: 'protocol:maple',
     peggedTo: 'USD',
+    collateral: ['token:USDT:ethereum'], // syrupUSDT is backed by USDT deposits
   },
   // ============== Additional Stablecoins from Verified Holdings ==============
   {
@@ -2004,6 +2008,7 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     type: 'stablecoin',
     issuer: 'protocol:infinifi',
     peggedTo: 'USD',
+    collateral: ['token:iUSD:ethereum'], // siUSD is backed by staked iUSD
   },
   {
     id: 'token:wsrUSD:ethereum',
