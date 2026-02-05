@@ -20,10 +20,25 @@ import {
   TRACKED_VAULTS,
   TRACKED_PROTOCOLS,
   TRACKED_TOKENS,
+  TRACKED_ISSUERS,
   getVaultById,
   getProtocolBySlug,
   getTokenById,
 } from '@/lib/vault-registry';
+
+/**
+ * Find tokens issued by a protocol or issuer
+ */
+function getTokensIssuedBy(issuerId: string): typeof TRACKED_TOKENS {
+  return TRACKED_TOKENS.filter(t => t.issuer === issuerId);
+}
+
+/**
+ * Get issuer details by ID
+ */
+function getIssuerById(issuerId: string) {
+  return TRACKED_ISSUERS.find(i => i.id === issuerId);
+}
 import { adapterRegistry, ConfiguredAllocation } from '@/adapters';
 
 // ============== TYPES ==============
@@ -338,10 +353,15 @@ export class GraphBuilder {
         } as TokenEntity;
       }
     } else if (entityId.startsWith('issuer:')) {
+      const issuer = getIssuerById(entityId);
       entity = {
         id: entityId,
         type: EntityType.ISSUER,
-        name: entityId.replace('issuer:', '').charAt(0).toUpperCase() + entityId.slice(8),
+        name: issuer?.name || entityId.replace('issuer:', '').split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        metadata: {
+          type: issuer?.type || 'unknown',
+          tokens: issuer?.tokens || [],
+        },
       } as Entity;
     } else if (entityId.startsWith('chain:')) {
       entity = {
@@ -470,6 +490,26 @@ export class GraphBuilder {
             });
           }
         }
+      }
+
+      // Check if this protocol issues any tokens (e.g., Ethena → USDe)
+      const issuedTokens = getTokensIssuedBy(`protocol:${slug}`);
+      for (const token of issuedTokens) {
+        const tokenId = token.id;
+        deps.push({
+          edge: {
+            id: `${entity.id}->issues:${tokenId}`,
+            sourceId: entity.id,
+            targetId: tokenId,
+            type: DependencyType.TOKEN_ISSUER,
+            weight: 1,
+            metadata: {
+              relationship: 'issues',
+            },
+          },
+          targetId: tokenId,
+          weight: 1,
+        });
       }
 
       // Oracle dependency

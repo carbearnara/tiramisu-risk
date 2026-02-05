@@ -873,17 +873,81 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
   },
 
   // T-Bills - Real World Assets (RWA)
+  // Tokenized treasuries issued by various RWA providers
   {
     id: 'protocol:tbills',
-    name: 'US Treasury Bills',
+    name: 'Tokenized Treasuries',
     slug: 'tbills',
     category: ProtocolCategory.STABLECOIN, // RWA category
     chains: [Chain.ETHEREUM],
     governance: {
-      type: GovernanceType.IMMUTABLE, // US Government - not upgradeable
+      type: GovernanceType.MULTISIG, // Managed by RWA issuers
     },
     auditors: [],
     isUpgradeable: false,
+    // Typical allocation across RWA providers
+    strategyAllocations: [
+      { protocol: 'blackrock-buidl', allocation: 40, asset: 'BUIDL' },   // BlackRock USD Institutional Digital Liquidity
+      { protocol: 'ondo-usdy', allocation: 30, asset: 'USDY' },          // Ondo US Dollar Yield
+      { protocol: 'mountain-usdm', allocation: 20, asset: 'USDM' },      // Mountain Protocol USDM
+      { protocol: 'hashnote-usyc', allocation: 10, asset: 'USYC' },      // Hashnote US Yield Coin
+    ],
+  },
+
+  // BlackRock BUIDL - Institutional tokenized treasury fund
+  {
+    id: 'protocol:blackrock-buidl',
+    name: 'BlackRock BUIDL',
+    slug: 'blackrock-buidl',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG, // BlackRock managed
+    },
+    auditors: ['PwC'],
+    isUpgradeable: false,
+  },
+
+  // Ondo USDY - Tokenized treasury notes
+  {
+    id: 'protocol:ondo-usdy',
+    name: 'Ondo Finance USDY',
+    slug: 'ondo-usdy',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: ['Code4rena', 'Nethermind'],
+    isUpgradeable: true,
+  },
+
+  // Mountain Protocol USDM
+  {
+    id: 'protocol:mountain-usdm',
+    name: 'Mountain Protocol USDM',
+    slug: 'mountain-usdm',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: ['OpenZeppelin'],
+    isUpgradeable: true,
+  },
+
+  // Hashnote USYC
+  {
+    id: 'protocol:hashnote-usyc',
+    name: 'Hashnote USYC',
+    slug: 'hashnote-usyc',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: true,
   },
 
   // Curve - DEX
@@ -1167,7 +1231,7 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     address: '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3',
     decimals: 18,
     type: 'stablecoin',
-    issuer: 'protocol:ethena',
+    issuer: 'issuer:ethena',
     peggedTo: 'USD',
   },
   {
@@ -1236,6 +1300,51 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     issuer: 'protocol:frax',
     peggedTo: 'USD',
   },
+  // ============== RWA / Tokenized Treasury Tokens ==============
+  {
+    id: 'token:BUIDL:ethereum',
+    symbol: 'BUIDL',
+    name: 'BlackRock USD Institutional Digital Liquidity',
+    chain: Chain.ETHEREUM,
+    address: '0x7712c34205737192402172409a8F7ccef8aA2AEc',
+    decimals: 6,
+    type: 'stablecoin',
+    issuer: 'issuer:blackrock',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:USDY:ethereum',
+    symbol: 'USDY',
+    name: 'Ondo US Dollar Yield',
+    chain: Chain.ETHEREUM,
+    address: '0x96F6eF951840721AdBF46Ac996b59E0235CB985C',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'issuer:ondo',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:USDM:ethereum',
+    symbol: 'USDM',
+    name: 'Mountain Protocol USDM',
+    chain: Chain.ETHEREUM,
+    address: '0x59D9356E565Ab3A36dD77763Fc0d87fEaf85508C',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'issuer:mountain',
+    peggedTo: 'USD',
+  },
+  {
+    id: 'token:USYC:ethereum',
+    symbol: 'USYC',
+    name: 'Hashnote US Yield Coin',
+    chain: Chain.ETHEREUM,
+    address: '0x136471a34f6ef19fE571EFFC1CA711fdb8E49f2b',
+    decimals: 6,
+    type: 'stablecoin',
+    issuer: 'issuer:hashnote',
+    peggedTo: 'USD',
+  },
 ];
 
 // ============== TRACKED ISSUERS ==============
@@ -1264,6 +1373,37 @@ export const TRACKED_ISSUERS: TrackedIssuer[] = [
     name: 'Ripple',
     type: 'centralized',
     tokens: ['token:RLUSD:ethereum'],
+  },
+  // ============== RWA / Tokenized Treasury Issuers ==============
+  {
+    id: 'issuer:blackrock',
+    name: 'BlackRock',
+    type: 'centralized',
+    tokens: ['token:BUIDL:ethereum'],
+  },
+  {
+    id: 'issuer:ondo',
+    name: 'Ondo Finance',
+    type: 'centralized',
+    tokens: ['token:USDY:ethereum'],
+  },
+  {
+    id: 'issuer:mountain',
+    name: 'Mountain Protocol',
+    type: 'centralized',
+    tokens: ['token:USDM:ethereum'],
+  },
+  {
+    id: 'issuer:hashnote',
+    name: 'Hashnote',
+    type: 'centralized',
+    tokens: ['token:USYC:ethereum'],
+  },
+  {
+    id: 'issuer:ethena',
+    name: 'Ethena Labs',
+    type: 'decentralized',
+    tokens: ['token:USDe:ethereum'],
   },
 ];
 
