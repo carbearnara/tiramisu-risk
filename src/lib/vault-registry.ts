@@ -760,7 +760,8 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
 
   // Ethena - Synthetic dollar (USDe/sUSDe)
   // USDe is backed by delta-neutral positions: long spot ETH/BTC + short perps
-  // Source: https://ethena.fi/transparency
+  // Source: https://ethena.fi/transparency, https://docs.ethena.fi/how-usde-works
+  // ~93% delta-neutral positions, ~7% liquid stablecoins (USDC, USDT, USDtb)
   {
     id: 'protocol:ethena',
     name: 'Ethena',
@@ -777,9 +778,12 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     auditors: ['Quantstamp', 'Pashov'],
     isUpgradeable: true,
     strategyAllocations: [
-      { protocol: 'delta-neutral', allocation: 55, asset: 'stETH' },  // Lido stETH + short ETH perps
-      { protocol: 'delta-neutral', allocation: 30, asset: 'BTC' },    // BTC + short BTC perps
+      { protocol: 'delta-neutral', allocation: 50, asset: 'stETH' },  // Lido stETH + short ETH perps
+      { protocol: 'delta-neutral', allocation: 28, asset: 'BTC' },    // BTC + short BTC perps
       { protocol: 'delta-neutral', allocation: 15, asset: 'ETH' },    // Native ETH + short perps
+      { protocol: 'usdt-reserve', allocation: 3, asset: 'USDT' },     // Tether reserve
+      { protocol: 'usdc-reserve', allocation: 2, asset: 'USDC' },     // Circle reserve
+      { protocol: 'tbills', allocation: 2, asset: 'USDtb' },          // USDtb (Ethena's T-bill token)
     ],
   },
 
@@ -1080,6 +1084,7 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
   },
 
   // Delta-Neutral Strategies (perps hedging)
+  // Includes CEX counterparty risk for perpetual futures
   {
     id: 'protocol:delta-neutral',
     name: 'Delta-Neutral (Perps)',
@@ -1091,6 +1096,9 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     },
     auditors: [],
     isUpgradeable: true,
+    strategyAllocations: [
+      { protocol: 'cex-counterparty', allocation: 100, asset: 'PERP' }, // All perps on CEXs
+    ],
   },
 
   // MakerDAO / Sky - DAI/sDAI issuer
@@ -1138,6 +1146,96 @@ export const TRACKED_PROTOCOLS: TrackedProtocol[] = [
     governance: {
       type: GovernanceType.IMMUTABLE,
     },
+    auditors: [],
+    isUpgradeable: false,
+  },
+
+  // USDT Reserve (Tether holdings)
+  {
+    id: 'protocol:usdt-reserve',
+    name: 'USDT Reserve',
+    slug: 'usdt-reserve',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: false,
+  },
+
+  // USDC Reserve (Circle holdings)
+  {
+    id: 'protocol:usdc-reserve',
+    name: 'USDC Reserve',
+    slug: 'usdc-reserve',
+    category: ProtocolCategory.STABLECOIN,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: false,
+  },
+
+  // CEX Counterparty Risk (for delta-neutral strategies)
+  {
+    id: 'protocol:cex-counterparty',
+    name: 'CEX Counterparty',
+    slug: 'cex-counterparty',
+    category: ProtocolCategory.OTHER,
+    chains: [Chain.ETHEREUM],
+    governance: {
+      type: GovernanceType.MULTISIG,
+    },
+    auditors: [],
+    isUpgradeable: false,
+    strategyAllocations: [
+      { protocol: 'binance', allocation: 40, asset: 'PERP' },
+      { protocol: 'bybit', allocation: 25, asset: 'PERP' },
+      { protocol: 'okx', allocation: 20, asset: 'PERP' },
+      { protocol: 'deribit', allocation: 15, asset: 'PERP' },
+    ],
+  },
+
+  // CEX protocols
+  {
+    id: 'protocol:binance',
+    name: 'Binance',
+    slug: 'binance',
+    category: ProtocolCategory.OTHER,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.MULTISIG },
+    auditors: [],
+    isUpgradeable: false,
+  },
+  {
+    id: 'protocol:bybit',
+    name: 'Bybit',
+    slug: 'bybit',
+    category: ProtocolCategory.OTHER,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.MULTISIG },
+    auditors: [],
+    isUpgradeable: false,
+  },
+  {
+    id: 'protocol:okx',
+    name: 'OKX',
+    slug: 'okx',
+    category: ProtocolCategory.OTHER,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.MULTISIG },
+    auditors: [],
+    isUpgradeable: false,
+  },
+  {
+    id: 'protocol:deribit',
+    name: 'Deribit',
+    slug: 'deribit',
+    category: ProtocolCategory.OTHER,
+    chains: [Chain.ETHEREUM],
+    governance: { type: GovernanceType.MULTISIG },
     auditors: [],
     isUpgradeable: false,
   },
@@ -1301,6 +1399,17 @@ export const TRACKED_TOKENS: TrackedToken[] = [
     peggedTo: 'USD',
   },
   // ============== RWA / Tokenized Treasury Tokens ==============
+  {
+    id: 'token:USDtb:ethereum',
+    symbol: 'USDtb',
+    name: 'Ethena USDtb (T-Bill Backed)',
+    chain: Chain.ETHEREUM,
+    address: '0xC139190F447e929f090Edeb554D95AbB8b18aC1c',
+    decimals: 18,
+    type: 'stablecoin',
+    issuer: 'issuer:ethena',
+    peggedTo: 'USD',
+  },
   {
     id: 'token:BUIDL:ethereum',
     symbol: 'BUIDL',
