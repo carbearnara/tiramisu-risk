@@ -21,6 +21,9 @@ import { VaultNode } from './nodes/VaultNode';
 import { ProtocolNode } from './nodes/ProtocolNode';
 import { TokenNode } from './nodes/TokenNode';
 import { GenericNode } from './nodes/GenericNode';
+import { SunburstChart } from './SunburstChart';
+
+type ViewMode = 'sunburst' | 'detailed' | 'consolidated';
 
 // Node type mapping
 const nodeTypes: NodeTypes = {
@@ -58,14 +61,13 @@ export function RiskGraph({ className }: RiskGraphProps) {
     selectNode,
     highlightedPath,
     isLoading,
-    isConsolidated,
-    toggleConsolidatedView,
     getConsolidatedNodes,
     getConsolidatedEdges,
     visibleEntityTypes,
     setVisibleEntityTypes,
   } = useGraphStore();
 
+  const [viewMode, setViewMode] = useState<ViewMode>('sunburst');
   const [legendExpanded, setLegendExpanded] = useState(false);
 
   // Toggle entity type visibility
@@ -84,7 +86,7 @@ export function RiskGraph({ className }: RiskGraphProps) {
 
   // Convert store data to React Flow format, filtering by visible entity types
   const initialNodes = useMemo(() => {
-    const sourceNodes = isConsolidated ? getConsolidatedNodes() : storeNodes;
+    const sourceNodes = viewMode === 'consolidated' ? getConsolidatedNodes() : storeNodes;
     return sourceNodes
       .filter((node) => visibleEntityTypes.has(node.type))
       .map((node) => ({
@@ -94,7 +96,7 @@ export function RiskGraph({ className }: RiskGraphProps) {
         data: node.data,
         selected: node.id === selectedNodeId,
       }));
-  }, [storeNodes, selectedNodeId, isConsolidated, getConsolidatedNodes, visibleEntityTypes]);
+  }, [storeNodes, selectedNodeId, viewMode, getConsolidatedNodes, visibleEntityTypes]);
 
   // Get set of visible node IDs for edge filtering
   const visibleNodeIds = useMemo(() => {
@@ -102,7 +104,7 @@ export function RiskGraph({ className }: RiskGraphProps) {
   }, [initialNodes]);
 
   const initialEdges = useMemo(() => {
-    const sourceEdges = isConsolidated ? getConsolidatedEdges() : storeEdges;
+    const sourceEdges = viewMode === 'consolidated' ? getConsolidatedEdges() : storeEdges;
     return sourceEdges
       .filter((edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target))
       .map((edge) => ({
@@ -122,7 +124,7 @@ export function RiskGraph({ className }: RiskGraphProps) {
               : 1,
         },
       }));
-  }, [storeEdges, highlightedPath, isConsolidated, getConsolidatedEdges, visibleNodeIds]);
+  }, [storeEdges, highlightedPath, viewMode, getConsolidatedEdges, visibleNodeIds]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -155,7 +157,7 @@ export function RiskGraph({ className }: RiskGraphProps) {
     );
   }
 
-  if (nodes.length === 0) {
+  if (nodes.length === 0 && viewMode !== 'sunburst') {
     return (
       <div className={`flex items-center justify-center h-full ${className}`}>
         <div className="text-center text-gray-500">
@@ -165,6 +167,80 @@ export function RiskGraph({ className }: RiskGraphProps) {
     );
   }
 
+  // View toggle panel (shared between views)
+  const ViewTogglePanel = (
+    <div
+      className="bg-white border rounded-lg shadow-sm overflow-hidden transition-all duration-200"
+      onMouseEnter={() => setLegendExpanded(true)}
+      onMouseLeave={() => setLegendExpanded(false)}
+    >
+      {/* View Toggle */}
+      <div className="flex text-xs border-b">
+        <button
+          onClick={() => setViewMode('sunburst')}
+          className={`px-3 py-1.5 transition-colors ${viewMode === 'sunburst' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
+        >
+          Sunburst
+        </button>
+        <button
+          onClick={() => setViewMode('detailed')}
+          className={`px-3 py-1.5 transition-colors ${viewMode === 'detailed' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
+        >
+          Tree
+        </button>
+        <button
+          onClick={() => setViewMode('consolidated')}
+          className={`px-3 py-1.5 transition-colors ${viewMode === 'consolidated' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
+        >
+          Flat
+        </button>
+      </div>
+      {/* Legend */}
+      {legendExpanded ? (
+        <div className="p-3 space-y-1">
+          <h4 className="text-xs font-medium text-gray-500 mb-2">Entity Types</h4>
+          {entityTypeConfig.map(({ type, color, label }) => (
+            <LegendItem
+              key={type}
+              color={color}
+              label={label}
+              active={visibleEntityTypes.has(type)}
+              onClick={() => toggleEntityType(type)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="p-2 flex gap-1">
+          {entityTypeConfig.slice(0, 4).map(({ type, color }) => (
+            <div
+              key={type}
+              className="w-2.5 h-2.5 rounded-full cursor-pointer transition-opacity"
+              style={{
+                backgroundColor: color,
+                opacity: visibleEntityTypes.has(type) ? 1 : 0.3,
+              }}
+              onClick={() => toggleEntityType(type)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // Sunburst view
+  if (viewMode === 'sunburst') {
+    return (
+      <div className={`w-full h-full bg-gray-50 relative ${className}`}>
+        <SunburstChart className="w-full h-full" />
+        {/* Floating panel */}
+        <div className="absolute top-4 right-4">
+          {ViewTogglePanel}
+        </div>
+      </div>
+    );
+  }
+
+  // Tree/Flat view (React Flow)
   return (
     <div className={`w-full h-full bg-gray-50 ${className}`}>
       <ReactFlow
@@ -187,56 +263,7 @@ export function RiskGraph({ className }: RiskGraphProps) {
 
         {/* View Toggle + Legend */}
         <Panel position="top-right">
-          <div
-            className="bg-white border rounded-lg shadow-sm overflow-hidden transition-all duration-200"
-            onMouseEnter={() => setLegendExpanded(true)}
-            onMouseLeave={() => setLegendExpanded(false)}
-          >
-            {/* View Toggle */}
-            <div className="flex text-xs border-b">
-              <button
-                onClick={() => isConsolidated && toggleConsolidatedView()}
-                className={`px-3 py-1.5 transition-colors ${!isConsolidated ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
-              >
-                Detailed
-              </button>
-              <button
-                onClick={() => !isConsolidated && toggleConsolidatedView()}
-                className={`px-3 py-1.5 transition-colors ${isConsolidated ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
-              >
-                Consolidated
-              </button>
-            </div>
-            {/* Legend */}
-            {legendExpanded ? (
-              <div className="p-3 space-y-1">
-                <h4 className="text-xs font-medium text-gray-500 mb-2">Entity Types</h4>
-                {entityTypeConfig.map(({ type, color, label }) => (
-                  <LegendItem
-                    key={type}
-                    color={color}
-                    label={label}
-                    active={visibleEntityTypes.has(type)}
-                    onClick={() => toggleEntityType(type)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="p-2 flex gap-1">
-                {entityTypeConfig.slice(0, 4).map(({ type, color }) => (
-                  <div
-                    key={type}
-                    className="w-2.5 h-2.5 rounded-full cursor-pointer transition-opacity"
-                    style={{
-                      backgroundColor: color,
-                      opacity: visibleEntityTypes.has(type) ? 1 : 0.3,
-                    }}
-                    onClick={() => toggleEntityType(type)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          {ViewTogglePanel}
         </Panel>
       </ReactFlow>
     </div>
