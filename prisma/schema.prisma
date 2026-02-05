@@ -1,0 +1,328 @@
+// Prisma schema for DeFi Risk Dependency Chart System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============== ENUMS ==============
+
+enum EntityType {
+  vault
+  protocol
+  token
+  oracle
+  issuer
+  bridge
+  governance
+  custodian
+}
+
+enum Chain {
+  ethereum
+  arbitrum
+  optimism
+  polygon
+  base
+  avalanche
+}
+
+enum RiskLevel {
+  critical
+  high
+  medium
+  low
+  minimal
+}
+
+enum DependencyType {
+  strategy_allocation
+  underlying_asset
+  token_issuer
+  collateralized_by
+  oracle_dependency
+  governance_control
+  nested_vault
+  lives_on
+  fork_of
+  bridge_dependency
+}
+
+enum RiskCategory {
+  smart_contract
+  counterparty
+  oracle
+  governance
+  liquidity
+  custody
+}
+
+enum ProtocolCategory {
+  lending
+  dex
+  yield_aggregator
+  derivatives
+  bridge
+  staking
+  liquid_staking
+  cdp
+  other
+}
+
+enum GovernanceType {
+  multisig
+  dao
+  eoa
+  immutable
+  timelock
+}
+
+enum OracleType {
+  chainlink
+  pyth
+  twap
+  redstone
+  custom
+}
+
+enum IncidentType {
+  exploit
+  bug
+  oracle_failure
+  governance_attack
+  rug_pull
+  other
+}
+
+enum Severity {
+  critical
+  high
+  medium
+  low
+}
+
+// ============== CORE MODELS ==============
+
+model Entity {
+  id        String     @id
+  name      String
+  type      EntityType
+  chain     Chain?
+  address   String?
+  metadata  Json       @default("{}")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  riskAssessments RiskAssessment[]
+  outgoingEdges   DependencyEdge[] @relation("SourceEntity")
+  incomingEdges   DependencyEdge[] @relation("TargetEntity")
+
+  // Type-specific data
+  vaultData    VaultData?
+  protocolData ProtocolData?
+  tokenData    TokenData?
+  oracleData   OracleData?
+  issuerData   IssuerData?
+  bridgeData   BridgeData?
+
+  // Related records
+  audits    Audit[]
+  incidents Incident[]
+
+  @@index([type])
+  @@index([chain, address])
+  @@index([name])
+}
+
+// ============== VAULT ==============
+
+model VaultData {
+  entityId String @id
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  underlyingSymbol   String
+  underlyingAddress  String
+  underlyingDecimals Int
+  tvl                Float
+  apy                Float?
+  operatorId         String
+  isERC4626          Boolean  @default(false)
+  strategies         Json     @default("[]") // Strategy[]
+  shareTokenAddress  String?
+  depositLimit       String?  // BigInt as string
+  withdrawalFee      Float?
+
+  @@index([operatorId])
+  @@index([underlyingSymbol])
+}
+
+// ============== PROTOCOL ==============
+
+model ProtocolData {
+  entityId String @id
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  category       ProtocolCategory
+  tvl            Float
+  governance     Json              @default("{}") // GovernanceInfo
+  oracleConfig   Json?             // OracleConfig
+  forkedFromId   String?
+  deployedChains Chain[]
+  isUpgradeable  Boolean           @default(false)
+  hasTimeLock    Boolean           @default(false)
+
+  @@index([category])
+}
+
+// ============== TOKEN ==============
+
+model TokenData {
+  entityId String @id
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  symbol     String
+  decimals   Int
+  issuerId   String?
+  tokenType  String   @default("other") // stablecoin, governance, lst, lrt, native, wrapped, other
+  peggedTo   String?
+  collateral Json     @default("[]") // Entity IDs
+
+  @@index([symbol])
+  @@index([issuerId])
+}
+
+// ============== ORACLE ==============
+
+model OracleData {
+  entityId String @id
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  oracleType     OracleType
+  supportedFeeds Json       @default("[]") // PriceFeed[]
+  tvlSecured     Float?
+
+  @@index([oracleType])
+}
+
+// ============== ISSUER ==============
+
+model IssuerData {
+  entityId String @id
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  issuerType         String  @default("centralized") // centralized, decentralized, algorithmic
+  jurisdiction       String?
+  regulatoryStatus   String?
+  reserveAttestation Json?   // { url, lastUpdate, auditor }
+  issuedTokens       Json    @default("[]") // Entity IDs
+}
+
+// ============== BRIDGE ==============
+
+model BridgeData {
+  entityId String @id
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  bridgeType      String  @default("third_party") // canonical, third_party, native
+  supportedChains Chain[]
+  tvl             Float
+  securityModel   String  @default("multisig") // multisig, optimistic, zk, trusted
+}
+
+// ============== DEPENDENCY EDGES ==============
+
+model DependencyEdge {
+  id       String         @id @default(cuid())
+  sourceId String
+  targetId String
+  type     DependencyType
+  weight   Float          @default(1)
+  metadata Json           @default("{}")
+
+  source Entity @relation("SourceEntity", fields: [sourceId], references: [id], onDelete: Cascade)
+  target Entity @relation("TargetEntity", fields: [targetId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sourceId, targetId, type])
+  @@index([sourceId])
+  @@index([targetId])
+  @@index([type])
+}
+
+// ============== RISK ASSESSMENT ==============
+
+model RiskAssessment {
+  id              String    @id @default(cuid())
+  entityId        String
+  entity          Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  timestamp       DateTime  @default(now())
+  overallScore    Float
+  overallLevel    RiskLevel
+  categoryScores  Json      @default("[]") // CategoryScore[]
+  aggregatedRisks Json      @default("[]") // AggregatedRisk[]
+  directRisks     Json      @default("[]") // DirectRisk[]
+  usdExposure     Float?
+
+  @@index([entityId, timestamp])
+  @@index([overallLevel])
+}
+
+// ============== AUDIT ==============
+
+model Audit {
+  id        String   @id @default(cuid())
+  entityId  String
+  entity    Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  auditor   String
+  date      DateTime
+  reportUrl String?
+  scope     String
+  version   String?
+  findings  Json     @default("{}") // { critical, high, medium, low, informational, resolved }
+
+  createdAt DateTime @default(now())
+
+  @@index([entityId])
+  @@index([auditor])
+  @@index([date])
+}
+
+// ============== INCIDENT ==============
+
+model Incident {
+  id            String       @id @default(cuid())
+  entityId      String
+  entity        Entity       @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  date          DateTime
+  type          IncidentType
+  severity      Severity
+  lossUsd       Float?
+  description   String
+  postMortemUrl String?
+  resolved      Boolean      @default(false)
+  txHash        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityId])
+  @@index([date])
+  @@index([severity])
+}
+
+// ============== CACHE ==============
+
+model CacheEntry {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
