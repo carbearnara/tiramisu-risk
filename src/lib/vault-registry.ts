@@ -286,6 +286,7 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocol: 'Re.xyz',
     protocolSlug: 'rexyz',
     chain: Chain.ETHEREUM,
+    address: '0xdDC0f880ff6e4e22E4B74632fBb43Ce4DF6cCC5a',
     underlying: 'USDe',
     strategyAllocations: [
       { protocol: 'ethena', allocation: 55 },    // Idle funds in sUSDe
@@ -317,6 +318,7 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocol: 'Reservoir',
     protocolSlug: 'reservoir',
     chain: Chain.ETHEREUM,
+    address: '0x738d1115B90efa71AE468F1287fc864775e23a31',
     underlying: 'USDC',
     strategyAllocations: [
       { protocol: 'ethena', allocation: 45 },    // Higher yield allocation
@@ -327,6 +329,7 @@ export const TRACKED_VAULTS: TrackedVault[] = [
   },
 
   // Resolv Labs - Delta-neutral stablecoin
+  // USR is a USD stablecoin backed by delta-neutral ETH positions
   {
     id: 'resolv:usr:ethereum',
     name: 'Resolv USR',
@@ -334,8 +337,10 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocolSlug: 'resolv',
     chain: Chain.ETHEREUM,
     address: '0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110',
-    underlying: 'ETH',
-    strategies: ['ethena'], // Uses delta-neutral with ETH perps
+    underlying: 'USDC', // USR is a USD stablecoin, not ETH
+    strategyAllocations: [
+      { protocol: 'ethena', allocation: 100 }, // Delta-neutral ETH perps
+    ],
   },
   {
     id: 'resolv:rlp:ethereum',
@@ -343,8 +348,11 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocol: 'Resolv',
     protocolSlug: 'resolv',
     chain: Chain.ETHEREUM,
-    underlying: 'ETH',
-    strategies: ['ethena'],
+    address: '0x4956b52aE2fF65D74CA2d61207523288e4528f96',
+    underlying: 'USDC', // RLP is also USD-denominated
+    strategyAllocations: [
+      { protocol: 'ethena', allocation: 100 }, // Risk layer for USR
+    ],
   },
 
   // Yuzu Money (OuroborosCap8) - Overcollateralized stablecoin
@@ -370,14 +378,18 @@ export const TRACKED_VAULTS: TrackedVault[] = [
   },
 
   // Avant Protocol - Avalanche yield protocol
+  // Source: https://docs.avantprotocol.com/security/contract-addresses
   {
     id: 'avant:savusd:avalanche',
     name: 'Avant Staked avUSD (savUSD)',
     protocol: 'Avant',
     protocolSlug: 'avant-protocol',
     chain: Chain.AVALANCHE,
+    address: '0x06d47F3fb376649c3A9Dafe069B3D6E35572219E',
     underlying: 'USDC',
-    strategies: ['aave-v3'], // Uses 0xPartners delta-neutral strategies
+    strategyAllocations: [
+      { protocol: 'aave-v3', allocation: 100 }, // 0xPartners delta-neutral strategies
+    ],
   },
   {
     id: 'avant:savbtc:avalanche',
@@ -385,8 +397,11 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocol: 'Avant',
     protocolSlug: 'avant-protocol',
     chain: Chain.AVALANCHE,
+    address: '0x649342c6bff544d82DF1B2bA3C93e0C22cDeBa84',
     underlying: 'BTC',
-    strategies: ['aave-v3'],
+    strategyAllocations: [
+      { protocol: 'aave-v3', allocation: 100 },
+    ],
   },
   {
     id: 'avant:saveth:avalanche',
@@ -394,8 +409,11 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocol: 'Avant',
     protocolSlug: 'avant-protocol',
     chain: Chain.AVALANCHE,
+    address: '0x260c0c715A279F239cF44e2F73E964AB550738f3',
     underlying: 'ETH',
-    strategies: ['aave-v3'],
+    strategyAllocations: [
+      { protocol: 'aave-v3', allocation: 100 },
+    ],
   },
 
   // Noon - Smart yield stablecoin (delta-neutral + T-bills)
@@ -424,14 +442,19 @@ export const TRACKED_VAULTS: TrackedVault[] = [
   },
 
   // YieldNest - Liquid restaking
+  // Source: https://docs.yieldnest.finance/security/deployment-addresses
   {
     id: 'yieldnest:yneth:ethereum',
     name: 'YieldNest ynETH',
     protocol: 'YieldNest',
     protocolSlug: 'yieldnest',
     chain: Chain.ETHEREUM,
+    address: '0x09db87A538BD693E9d08544577d5cCfAA6373A48',
     underlying: 'ETH',
-    strategies: ['eigenlayer', 'lido'],
+    strategyAllocations: [
+      { protocol: 'eigenlayer', allocation: 60 },
+      { protocol: 'lido', allocation: 40 },
+    ],
   },
   {
     id: 'yieldnest:ynethx:ethereum',
@@ -439,8 +462,13 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocol: 'YieldNest',
     protocolSlug: 'yieldnest',
     chain: Chain.ETHEREUM,
+    address: '0x657d9ABA1DBb59e53f9F3eCAA878447dCfC96dCb',
     underlying: 'ETH',
-    strategies: ['eigenlayer', 'aave-v3', 'pendle'],
+    strategyAllocations: [
+      { protocol: 'eigenlayer', allocation: 50 },
+      { protocol: 'aave-v3', allocation: 30 },
+      { protocol: 'pendle', allocation: 20 },
+    ],
   },
   {
     id: 'yieldnest:ynusdx:ethereum',
@@ -448,6 +476,7 @@ export const TRACKED_VAULTS: TrackedVault[] = [
     protocol: 'YieldNest',
     protocolSlug: 'yieldnest',
     chain: Chain.ETHEREUM,
+    address: '0x3DB228FE836D99Ccb25Ec4dfdC80ED6d2CDdCB4b',
     underlying: 'USDC',
     strategies: ['eigenlayer', 'aave-v3', 'pendle'],
   },
