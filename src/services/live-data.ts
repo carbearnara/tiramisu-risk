@@ -566,6 +566,78 @@ export async function buildLiveVaultGraph(vaultId: string): Promise<{
           });
         }
       }
+
+      // Add nested protocol allocations (e.g., Cap → BUIDL/PYUSD/BENJI)
+      if (protocol.strategyAllocations) {
+        for (const nestedAlloc of protocol.strategyAllocations) {
+          const nestedProtocol = getProtocolBySlug(nestedAlloc.protocol);
+          if (nestedProtocol) {
+            // Create nested protocol entity if it doesn't exist
+            if (!entities.has(nestedProtocol.id)) {
+              const nestedLiveData = await fetchLiveProtocolData(nestedProtocol.slug);
+              const nestedProtocolEntity = await createProtocolEntity(nestedProtocol, nestedLiveData);
+              entities.set(nestedProtocol.id, nestedProtocolEntity);
+            }
+
+            // Add edge from parent protocol to nested protocol
+            const nestedEdgeId = `${protocol.id}->nested:${nestedProtocol.id}`;
+            if (!edges.some(e => e.id === nestedEdgeId)) {
+              edges.push({
+                id: nestedEdgeId,
+                sourceId: protocol.id,
+                targetId: nestedProtocol.id,
+                type: DependencyType.STRATEGY_ALLOCATION,
+                weight: nestedAlloc.allocation / 100,
+                metadata: {
+                  strategyName: nestedAlloc.asset || nestedProtocol.name,
+                  allocationPercent: nestedAlloc.allocation,
+                },
+              });
+            }
+
+            // Add edge to the asset token if specified
+            if (nestedAlloc.asset) {
+              const assetTokenId = `token:${nestedAlloc.asset}:${trackedVault.chain}`;
+              const assetToken = getTokenById(assetTokenId);
+              if (assetToken && !entities.has(assetTokenId)) {
+                const tokenEntity = createTokenEntity(assetToken);
+                entities.set(assetTokenId, tokenEntity);
+
+                // Add token issuer if applicable
+                if (assetToken.issuer) {
+                  const issuer = getIssuerById(assetToken.issuer);
+                  if (issuer && !entities.has(issuer.id)) {
+                    const issuerEntity = createIssuerEntity(issuer);
+                    entities.set(issuer.id, issuerEntity);
+
+                    edges.push({
+                      id: `${assetTokenId}->issuer:${issuer.id}`,
+                      sourceId: assetTokenId,
+                      targetId: issuer.id,
+                      type: DependencyType.TOKEN_ISSUER,
+                      weight: 1,
+                      metadata: {},
+                    });
+                  }
+                }
+              }
+
+              // Add edge from nested protocol to asset token
+              const assetEdgeId = `${nestedProtocol.id}->asset:${assetTokenId}`;
+              if (!edges.some(e => e.id === assetEdgeId)) {
+                edges.push({
+                  id: assetEdgeId,
+                  sourceId: nestedProtocol.id,
+                  targetId: assetTokenId,
+                  type: DependencyType.UNDERLYING_ASSET,
+                  weight: 1,
+                  metadata: {},
+                });
+              }
+            }
+          }
+        }
+      }
     }
   }
 
