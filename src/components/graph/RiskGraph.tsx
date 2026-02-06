@@ -22,6 +22,7 @@ import { ProtocolNode } from './nodes/ProtocolNode';
 import { TokenNode } from './nodes/TokenNode';
 import { GenericNode } from './nodes/GenericNode';
 import { SunburstChart } from './SunburstChart';
+import { CycleWarningPanel } from '../panels/CycleWarningPanel';
 
 type ViewMode = 'sunburst' | 'detailed' | 'consolidated';
 
@@ -236,6 +237,10 @@ export function RiskGraph({ className }: RiskGraphProps) {
         <div className="absolute top-4 right-4">
           {ViewTogglePanel}
         </div>
+        {/* Cycle warning panel */}
+        <div className="absolute bottom-4 left-4 right-4 max-w-md">
+          <CycleWarningPanel />
+        </div>
       </div>
     );
   }
@@ -264,6 +269,11 @@ export function RiskGraph({ className }: RiskGraphProps) {
         {/* View Toggle + Legend */}
         <Panel position="top-right">
           {ViewTogglePanel}
+        </Panel>
+
+        {/* Cycle warning panel */}
+        <Panel position="bottom-left" className="max-w-md">
+          <CycleWarningPanel />
         </Panel>
       </ReactFlow>
     </div>

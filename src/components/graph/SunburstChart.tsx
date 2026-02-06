@@ -232,6 +232,20 @@ export function SunburstChart({ className, onNodeClick }: SunburstChartProps) {
           const isHovered = arc.id === hoveredNode;
           const isSelected = arc.id === selectedNodeId;
           const isHighlighted = isHovered || isSelected;
+          const arcAngle = arc.endAngle - arc.startAngle;
+          const midAngle = (arc.startAngle + arc.endAngle) / 2;
+          const midRadius = (arc.innerRadius + arc.outerRadius) / 2;
+
+          // Only show label if arc is large enough (> 15 degrees)
+          const showLabel = arcAngle > 0.26 && arc.depth > 0;
+
+          // Calculate label position
+          const labelPos = polarToCartesian(midRadius, midAngle);
+
+          // Rotate text to follow arc, flip if on left side
+          const rotation = (midAngle * 180) / Math.PI - 90;
+          const flipText = rotation > 90 || rotation < -90;
+          const textRotation = flipText ? rotation + 180 : rotation;
 
           return (
             <g key={arc.id}>
@@ -258,6 +272,24 @@ export function SunburstChart({ className, onNodeClick }: SunburstChartProps) {
                   fill={arc.riskColor}
                   pointerEvents="none"
                 />
+              )}
+              {/* Arc label */}
+              {showLabel && (
+                <text
+                  x={labelPos.x}
+                  y={labelPos.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  transform={`rotate(${textRotation}, ${labelPos.x}, ${labelPos.y})`}
+                  className="fill-white pointer-events-none select-none"
+                  style={{
+                    fontSize: arc.depth === 1 ? '11px' : '9px',
+                    fontWeight: 500,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {arc.name.length > 12 ? arc.name.slice(0, 10) + '…' : arc.name}
+                </text>
               )}
             </g>
           );
