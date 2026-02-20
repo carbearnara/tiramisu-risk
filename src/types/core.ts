@@ -24,12 +24,12 @@ export enum Chain {
 }
 
 export enum RiskCategory {
-  SMART_CONTRACT = 'smart_contract',
-  COUNTERPARTY = 'counterparty',
-  ORACLE = 'oracle',
-  GOVERNANCE = 'governance',
-  LIQUIDITY = 'liquidity',
   CUSTODY = 'custody',
+  TRANSACTION = 'transaction',
+  PROTOCOL = 'protocol',
+  DIGITAL_ASSET = 'digital_asset',
+  STAKING = 'staking',
+  SYSTEMIC = 'systemic',
 }
 
 export enum RiskLevel {
@@ -468,12 +468,12 @@ export function isIssuerEntity(entity: Entity): entity is IssuerEntity {
 // ============== CONSTANTS ==============
 
 export const DEFAULT_RISK_WEIGHTS: Record<RiskCategory, number> = {
-  [RiskCategory.SMART_CONTRACT]: 0.25,
-  [RiskCategory.COUNTERPARTY]: 0.20,
-  [RiskCategory.ORACLE]: 0.15,
-  [RiskCategory.GOVERNANCE]: 0.15,
-  [RiskCategory.LIQUIDITY]: 0.15,
-  [RiskCategory.CUSTODY]: 0.10,
+  [RiskCategory.PROTOCOL]: 0.30,
+  [RiskCategory.DIGITAL_ASSET]: 0.25,
+  [RiskCategory.CUSTODY]: 0.15,
+  [RiskCategory.TRANSACTION]: 0.10,
+  [RiskCategory.STAKING]: 0.10,
+  [RiskCategory.SYSTEMIC]: 0.10,
 };
 
 export const RISK_LEVEL_THRESHOLDS = {

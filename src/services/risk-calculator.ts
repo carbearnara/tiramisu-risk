@@ -1,26 +1,27 @@
 // Risk Calculator Service
 // Calculates risk scores across all categories with inheritance through dependencies
+// Categories aligned with Onchain Risk Map v1.96 (Jan 2026) + EEA DeFi Risk Guidelines
 
 import {
   Entity,
-  EntityType,
   RiskCategory,
   RiskLevel,
   RiskAssessment,
   CategoryScore,
-  RiskFactor,
-  RiskEvidence,
   DirectRisk,
   AggregatedRisk,
   DependencyGraph,
   DependencyEdge,
   ProtocolEntity,
+  ProtocolCategory,
   TokenEntity,
   VaultEntity,
   AuditInfo,
   Incident,
   GovernanceInfo,
   GovernanceType,
+  OracleType,
+  Chain,
   DEFAULT_RISK_WEIGHTS,
   scoreToRiskLevel,
   isProtocolEntity,
@@ -33,12 +34,12 @@ import {
 // ============== TYPES ==============
 
 export interface RiskWeights {
-  [RiskCategory.SMART_CONTRACT]: number;
-  [RiskCategory.COUNTERPARTY]: number;
-  [RiskCategory.ORACLE]: number;
-  [RiskCategory.GOVERNANCE]: number;
-  [RiskCategory.LIQUIDITY]: number;
+  [RiskCategory.PROTOCOL]: number;
+  [RiskCategory.DIGITAL_ASSET]: number;
   [RiskCategory.CUSTODY]: number;
+  [RiskCategory.TRANSACTION]: number;
+  [RiskCategory.STAKING]: number;
+  [RiskCategory.SYSTEMIC]: number;
 }
 
 interface PathInfo {
@@ -128,6 +129,7 @@ export class RiskCalculatorService {
 
     if (isProtocolEntity(entity)) {
       risks.push(...this.calculateProtocolRisks(entity));
+      risks.push(...this.calculateProtocolStakingRisks(entity));
     } else if (isVaultEntity(entity)) {
       risks.push(...this.calculateVaultRisks(entity));
     } else if (isTokenEntity(entity)) {
@@ -138,19 +140,23 @@ export class RiskCalculatorService {
       risks.push(...this.calculateIssuerRisks(entity));
     }
 
+    // All entities get transaction and systemic risks
+    risks.push(...this.calculateTransactionRisks(entity));
+    risks.push(...this.calculateSystemicRisks(entity));
+
     return risks;
   }
 
   /**
-   * Calculate protocol-specific risks
+   * Calculate protocol-specific risks (Protocol category)
    */
   private calculateProtocolRisks(protocol: ProtocolEntity): DirectRisk[] {
     const risks: DirectRisk[] = [];
 
-    // Smart Contract Risk: Audit Status
+    // Protocol Risk: Audit Status
     const auditScore = this.calculateAuditScore(protocol.audits);
     risks.push({
-      category: RiskCategory.SMART_CONTRACT,
+      category: RiskCategory.PROTOCOL,
       factor: {
         id: 'audit_status',
         name: 'Audit Status',
@@ -166,10 +172,10 @@ export class RiskCalculatorService {
       },
     });
 
-    // Smart Contract Risk: Incident History
+    // Protocol Risk: Incident History
     const incidentScore = this.calculateIncidentScore(protocol.incidentHistory);
     risks.push({
-      category: RiskCategory.SMART_CONTRACT,
+      category: RiskCategory.PROTOCOL,
       factor: {
         id: 'incident_history',
         name: 'Incident History',
@@ -185,10 +191,10 @@ export class RiskCalculatorService {
       },
     });
 
-    // Smart Contract Risk: Code Maturity (TVL as proxy)
+    // Protocol Risk: Code Maturity (TVL as proxy)
     const maturityScore = this.calculateMaturityScore(protocol.tvl);
     risks.push({
-      category: RiskCategory.SMART_CONTRACT,
+      category: RiskCategory.PROTOCOL,
       factor: {
         id: 'code_maturity',
         name: 'Code Maturity',
@@ -204,10 +210,10 @@ export class RiskCalculatorService {
       },
     });
 
-    // Smart Contract Risk: Upgradability
+    // Protocol Risk: Upgradability
     const upgradeScore = protocol.isUpgradeable ? 60 : 85;
     risks.push({
-      category: RiskCategory.SMART_CONTRACT,
+      category: RiskCategory.PROTOCOL,
       factor: {
         id: 'upgradability',
         name: 'Contract Upgradability',
@@ -225,10 +231,10 @@ export class RiskCalculatorService {
       },
     });
 
-    // Governance Risk
+    // Protocol Risk: Governance Structure
     const governanceScore = this.calculateGovernanceScore(protocol.governance);
     risks.push({
-      category: RiskCategory.GOVERNANCE,
+      category: RiskCategory.PROTOCOL,
       factor: {
         id: 'governance_structure',
         name: 'Governance Structure',
@@ -244,13 +250,13 @@ export class RiskCalculatorService {
       },
     });
 
-    // Governance Risk: Timelock
+    // Protocol Risk: Timelock
     if (protocol.hasTimeLock && protocol.governance.timelockDuration) {
       const timelockScore = this.calculateTimelockScore(
         protocol.governance.timelockDuration
       );
       risks.push({
-        category: RiskCategory.GOVERNANCE,
+        category: RiskCategory.PROTOCOL,
         factor: {
           id: 'timelock',
           name: 'Timelock Duration',
@@ -267,21 +273,42 @@ export class RiskCalculatorService {
       });
     }
 
+    // Protocol Risk: Oracle Dependency
+    if (protocol.oracle) {
+      const oracleScore = this.calculateOracleDependencyScore(protocol.oracle.type);
+      risks.push({
+        category: RiskCategory.PROTOCOL,
+        factor: {
+          id: 'oracle_dependency',
+          name: 'Oracle Dependency',
+          description: `${protocol.oracle.type} oracle`,
+          score: oracleScore,
+          evidence: [
+            {
+              type: 'config' as const,
+              source: 'oracle',
+              value: protocol.oracle.type,
+            },
+          ],
+        },
+      });
+    }
+
     return risks;
   }
 
   /**
-   * Calculate vault-specific risks
+   * Calculate vault-specific risks (Digital Asset + Custody categories)
    */
   private calculateVaultRisks(vault: VaultEntity): DirectRisk[] {
     const risks: DirectRisk[] = [];
 
-    // Liquidity Risk: Strategy Concentration
+    // Digital Asset Risk: Strategy Concentration
     const concentrationScore = this.calculateStrategyConcentration(
       vault.strategies
     );
     risks.push({
-      category: RiskCategory.LIQUIDITY,
+      category: RiskCategory.DIGITAL_ASSET,
       factor: {
         id: 'strategy_concentration',
         name: 'Strategy Concentration',
@@ -295,12 +322,12 @@ export class RiskCalculatorService {
       },
     });
 
-    // Liquidity Risk: Withdrawal Constraints
+    // Digital Asset Risk: Withdrawal Constraints
     const withdrawalScore = vault.withdrawalFee
       ? Math.max(50, 100 - vault.withdrawalFee * 1000)
       : 90;
     risks.push({
-      category: RiskCategory.LIQUIDITY,
+      category: RiskCategory.DIGITAL_ASSET,
       factor: {
         id: 'withdrawal_fee',
         name: 'Withdrawal Fee',
@@ -318,10 +345,10 @@ export class RiskCalculatorService {
       },
     });
 
-    // Smart Contract Risk: ERC-4626 Compliance
+    // Protocol Risk: ERC-4626 Compliance
     const complianceScore = vault.isERC4626 ? 85 : 70;
     risks.push({
-      category: RiskCategory.SMART_CONTRACT,
+      category: RiskCategory.PROTOCOL,
       factor: {
         id: 'erc4626_compliance',
         name: 'ERC-4626 Compliance',
@@ -339,16 +366,40 @@ export class RiskCalculatorService {
       },
     });
 
+    // Custody Risk: Vault Custody Model
+    let custodyScore = vault.isERC4626 ? 80 : 60;
+    if (vault.tvl >= 100_000_000) custodyScore += 10;
+    else if (vault.tvl >= 10_000_000) custodyScore += 5;
+    custodyScore = Math.min(100, custodyScore);
+    risks.push({
+      category: RiskCategory.CUSTODY,
+      factor: {
+        id: 'vault_custody',
+        name: 'Vault Custody Model',
+        description: vault.isERC4626
+          ? 'ERC-4626 standardized custody'
+          : 'Non-standard custody interface',
+        score: custodyScore,
+        evidence: [
+          {
+            type: 'config' as const,
+            source: 'vault',
+            value: vault.isERC4626 ? 'ERC-4626' : 'custom',
+          },
+        ],
+      },
+    });
+
     return risks;
   }
 
   /**
-   * Calculate token-specific risks
+   * Calculate token-specific risks (Digital Asset + Staking categories)
    */
   private calculateTokenRisks(token: TokenEntity): DirectRisk[] {
     const risks: DirectRisk[] = [];
 
-    // Counterparty Risk: Token Type
+    // Digital Asset Risk: Token Type
     let tokenTypeScore = 80;
     switch (token.tokenType) {
       case 'native':
@@ -369,7 +420,7 @@ export class RiskCalculatorService {
     }
 
     risks.push({
-      category: RiskCategory.COUNTERPARTY,
+      category: RiskCategory.DIGITAL_ASSET,
       factor: {
         id: 'token_type',
         name: 'Token Type Risk',
@@ -385,11 +436,11 @@ export class RiskCalculatorService {
       },
     });
 
-    // Counterparty Risk: Collateral backing
+    // Digital Asset Risk: Collateral backing
     if (token.collateral && token.collateral.length > 0) {
       const collateralScore = Math.min(90, 50 + token.collateral.length * 10);
       risks.push({
-        category: RiskCategory.COUNTERPARTY,
+        category: RiskCategory.DIGITAL_ASSET,
         factor: {
           id: 'collateral_backing',
           name: 'Collateral Backing',
@@ -406,19 +457,40 @@ export class RiskCalculatorService {
       });
     }
 
+    // Staking Risk: LST/LRT Dependency
+    if (token.tokenType === 'lst' || token.tokenType === 'lrt') {
+      const lstLrtScore = token.tokenType === 'lst' ? 70 : 55;
+      risks.push({
+        category: RiskCategory.STAKING,
+        factor: {
+          id: 'lst_lrt_dependency',
+          name: 'LST/LRT Dependency',
+          description: `${token.tokenType.toUpperCase()} intermediary risk`,
+          score: lstLrtScore,
+          evidence: [
+            {
+              type: 'config' as const,
+              source: 'token',
+              value: token.tokenType,
+            },
+          ],
+        },
+      });
+    }
+
     return risks;
   }
 
   /**
-   * Calculate oracle-specific risks
+   * Calculate oracle-specific risks (Protocol category)
    */
   private calculateOracleRisks(oracle: Entity): DirectRisk[] {
     const risks: DirectRisk[] = [];
 
-    // Oracle Risk: Provider reputation
-    const providerScore = 75; // Placeholder - would vary by provider
+    // Protocol Risk: Oracle Provider
+    const providerScore = 75;
     risks.push({
-      category: RiskCategory.ORACLE,
+      category: RiskCategory.PROTOCOL,
       factor: {
         id: 'oracle_provider',
         name: 'Oracle Provider',
@@ -438,15 +510,15 @@ export class RiskCalculatorService {
   }
 
   /**
-   * Calculate issuer-specific risks
+   * Calculate issuer-specific risks (Digital Asset category)
    */
   private calculateIssuerRisks(issuer: Entity): DirectRisk[] {
     const risks: DirectRisk[] = [];
 
-    // Counterparty Risk: Issuer type (placeholder)
+    // Digital Asset Risk: Issuer Risk
     const issuerScore = 60;
     risks.push({
-      category: RiskCategory.COUNTERPARTY,
+      category: RiskCategory.DIGITAL_ASSET,
       factor: {
         id: 'issuer_risk',
         name: 'Issuer Risk',
@@ -457,6 +529,135 @@ export class RiskCalculatorService {
             type: 'config' as const,
             source: 'issuer',
             value: issuer.name,
+          },
+        ],
+      },
+    });
+
+    return risks;
+  }
+
+  /**
+   * Calculate transaction risks for any entity
+   */
+  private calculateTransactionRisks(entity: Entity): DirectRisk[] {
+    const risks: DirectRisk[] = [];
+
+    const interfaceScore = entity.metadata.website ? 70 : 50;
+    risks.push({
+      category: RiskCategory.TRANSACTION,
+      factor: {
+        id: 'interface_risk',
+        name: 'Interface Risk',
+        description: entity.metadata.website
+          ? 'Has known web interface'
+          : 'No known web interface',
+        score: interfaceScore,
+        evidence: [
+          {
+            type: 'config' as const,
+            source: 'metadata',
+            value: entity.metadata.website ? 'has_website' : 'no_website',
+          },
+        ],
+      },
+    });
+
+    return risks;
+  }
+
+  /**
+   * Calculate systemic risks for any entity
+   */
+  private calculateSystemicRisks(entity: Entity): DirectRisk[] {
+    const risks: DirectRisk[] = [];
+
+    const chainFinalityScores: Record<string, number> = {
+      [Chain.ETHEREUM]: 90,
+      [Chain.BASE]: 80,
+      [Chain.ARBITRUM]: 80,
+      [Chain.OPTIMISM]: 78,
+      [Chain.POLYGON]: 75,
+      [Chain.AVALANCHE]: 78,
+    };
+
+    const chainScore = entity.chain
+      ? chainFinalityScores[entity.chain] ?? 60
+      : 60;
+
+    risks.push({
+      category: RiskCategory.SYSTEMIC,
+      factor: {
+        id: 'chain_finality',
+        name: 'Chain Finality',
+        description: entity.chain
+          ? `Deployed on ${entity.chain}`
+          : 'Unknown chain deployment',
+        score: chainScore,
+        evidence: [
+          {
+            type: 'config' as const,
+            source: 'chain',
+            value: entity.chain ?? 'unknown',
+          },
+        ],
+      },
+    });
+
+    return risks;
+  }
+
+  /**
+   * Calculate staking risks for LST/LRT protocols only
+   */
+  private calculateProtocolStakingRisks(protocol: ProtocolEntity): DirectRisk[] {
+    const isStakingProtocol =
+      protocol.category === ProtocolCategory.LIQUID_STAKING ||
+      protocol.category === ProtocolCategory.LIQUID_RESTAKING;
+
+    if (!isStakingProtocol) return [];
+
+    const risks: DirectRisk[] = [];
+
+    // Staking Risk: Slashing Risk
+    const slashingScore =
+      protocol.category === ProtocolCategory.LIQUID_STAKING ? 70 : 55;
+    risks.push({
+      category: RiskCategory.STAKING,
+      factor: {
+        id: 'slashing_risk',
+        name: 'Slashing Risk',
+        description:
+          protocol.category === ProtocolCategory.LIQUID_STAKING
+            ? 'LST protocol — validator slashing exposure'
+            : 'LRT protocol — restaking + validator slashing exposure',
+        score: slashingScore,
+        evidence: [
+          {
+            type: 'config' as const,
+            source: 'protocol_category',
+            value: protocol.category,
+          },
+        ],
+      },
+    });
+
+    // Staking Risk: Staking Intermediary
+    const intermediaryScore = protocol.isUpgradeable ? 60 : 80;
+    risks.push({
+      category: RiskCategory.STAKING,
+      factor: {
+        id: 'staking_intermediary',
+        name: 'Staking Intermediary',
+        description: protocol.isUpgradeable
+          ? 'Upgradeable staking contracts'
+          : 'Immutable staking contracts',
+        score: intermediaryScore,
+        evidence: [
+          {
+            type: 'config' as const,
+            source: 'contract',
+            value: protocol.isUpgradeable ? 'upgradeable' : 'immutable',
           },
         ],
       },
@@ -599,13 +800,14 @@ export class RiskCalculatorService {
       case GovernanceType.IMMUTABLE:
         return 90; // No governance risk
 
-      case GovernanceType.DAO:
+      case GovernanceType.DAO: {
         // DAO score depends on timelock
         const daoBase = 60;
         const timelockBonus = governance.timelockDuration
           ? Math.min(25, governance.timelockDuration / (24 * 3600) * 5) // 5 points per day
           : 0;
         return daoBase + timelockBonus;
+      }
 
       case GovernanceType.MULTISIG:
         if (governance.multisigThreshold) {
@@ -668,6 +870,26 @@ export class RiskCalculatorService {
     const normalizedHHI = (hhi - minHHI) / (maxHHI - minHHI);
 
     return Math.round(90 - normalizedHHI * 50); // 40-90 range
+  }
+
+  /**
+   * Calculate oracle dependency score based on oracle type
+   */
+  private calculateOracleDependencyScore(oracleType: OracleType): number {
+    switch (oracleType) {
+      case OracleType.CHAINLINK:
+        return 85;
+      case OracleType.PYTH:
+        return 80;
+      case OracleType.REDSTONE:
+        return 70;
+      case OracleType.TWAP:
+        return 65;
+      case OracleType.CUSTOM:
+        return 50;
+      default:
+        return 50;
+    }
   }
 
   // ============== AGGREGATED RISKS ==============

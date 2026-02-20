@@ -18,31 +18,31 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ShieldAlert,
-  Users,
-  Radio,
-  Vote,
-  Droplets,
   Lock,
+  MousePointerClick,
+  Coins,
+  Layers,
+  Globe,
   ExternalLink,
   Info,
 } from 'lucide-react';
 
 const categoryIcons: Record<RiskCategory, React.ReactNode> = {
-  [RiskCategory.SMART_CONTRACT]: <ShieldAlert className="w-4 h-4" />,
-  [RiskCategory.COUNTERPARTY]: <Users className="w-4 h-4" />,
-  [RiskCategory.ORACLE]: <Radio className="w-4 h-4" />,
-  [RiskCategory.GOVERNANCE]: <Vote className="w-4 h-4" />,
-  [RiskCategory.LIQUIDITY]: <Droplets className="w-4 h-4" />,
   [RiskCategory.CUSTODY]: <Lock className="w-4 h-4" />,
+  [RiskCategory.TRANSACTION]: <MousePointerClick className="w-4 h-4" />,
+  [RiskCategory.PROTOCOL]: <ShieldAlert className="w-4 h-4" />,
+  [RiskCategory.DIGITAL_ASSET]: <Coins className="w-4 h-4" />,
+  [RiskCategory.STAKING]: <Layers className="w-4 h-4" />,
+  [RiskCategory.SYSTEMIC]: <Globe className="w-4 h-4" />,
 };
 
 const categoryLabels: Record<RiskCategory, string> = {
-  [RiskCategory.SMART_CONTRACT]: 'Smart Contract',
-  [RiskCategory.COUNTERPARTY]: 'Counterparty',
-  [RiskCategory.ORACLE]: 'Oracle',
-  [RiskCategory.GOVERNANCE]: 'Governance',
-  [RiskCategory.LIQUIDITY]: 'Liquidity',
   [RiskCategory.CUSTODY]: 'Custody',
+  [RiskCategory.TRANSACTION]: 'Transaction',
+  [RiskCategory.PROTOCOL]: 'Protocol',
+  [RiskCategory.DIGITAL_ASSET]: 'Digital Asset',
+  [RiskCategory.STAKING]: 'Staking',
+  [RiskCategory.SYSTEMIC]: 'Systemic',
 };
 
 const riskLevelBadgeVariants: Record<RiskLevel, 'destructive' | 'secondary' | 'outline'> = {
